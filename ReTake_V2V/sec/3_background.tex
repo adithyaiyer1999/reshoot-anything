@@ -1,0 +1,30 @@
+\section{Background (Draft v2)}
+\label{sec:background}
+
+% \todo{Introduce stuff necessary for following sections. e.g. wan 2.1 vs 2.2, video generation, latent space, rope etc @ADI Working on it}
+
+\subsection{Denoising-based Video Diffusion Models}
+
+Recent video diffusion models increasingly uses flow matching~\cite{flow_matching_lipman2022flow}, a type of stochastic-interpolant~\cite{stochastic_interpolants} as the objective  and diffusion transformers ~\cite{peebles2023scalable,flow_matching_ma2024sit} as model backbones for denoising.
+
+Following Rectified Flows (RFs) ~\cite{flow_matching_liu2022flow}, video diffusion models learn the velocity along a linear path from noise $x_0\!\sim\!\mathcal{N}(0,I)$ to data $x_1$. For a sampled time $t\in[0,1]$ the intermediate latent is $x_t = t x_1 + (1-t)x_0$ and the ground-truth velocity is $v_t = \mathrm{d}x_t/\mathrm{d}t = x_1 - x_0$. The model $u(\cdot;\theta)$ predicts this velocity conditioned on $x_t$, $t$ and context $c_{\text{context}}$ (e.g., text, image or camera parameters) by minimizing the MSE objective-
+\[
+\mathcal{L} = \mathbb{E}_{x_0,x_1,c_{\text{context}},t}\big[\|u(x_t,c_{\text{context}},t;\theta)-v_t\|^2\big].
+\]
+
+This formulation compactly casts generation as learning a deterministic velocity field along straight-line interpolants between noise and data, enabling conditional video synthesis with flow-matching objectives.
+
+\subsection{DiT based conditional video diffusion models}
+
+The advent of large-scale open-source Transformer-based (DiT) video diffusion models, like Wan2.1 ~\cite{wan21}, CogVideoX ~\cite{cogvideox} and HunyuanVideo ~\cite{kong2024hunyuanvideo}, has catalyzed the development of techniques to condition these models on diverse auxiliary inputs. The methodologies for integrating these conditional signals are multi-faceted. A common approach involves first encoding the control video or image into the latent space via the VAE and subsequently introducing these latent tokens as direct inputs to the diffusion model.
+
+More direct integration strategies are also prevalent, often falling into three primary categories: (1) concatenation of the control signal with the noisy latent along the channel dimension; (2) injection of conditional information through dedicated cross-attention layers; or (3) introduction of control signals as supplementary tokens processed by the full self-attention mechanism.
+
+For instance, \recammaster{}~\cite{bai2025recammaster} demonstrates that frame-level concatenation is a particularly robust method for integrating video controls within DiT-based architectures. Similarly, other papers like \trajectorycrafter{}~\cite{yu2025trajectorycrafter} and \exfd{}~\cite{ex4d} utilize concatenation along the channel dimension of the noisy latent, a technique that spatially aligns the control tokens with the nascent generation.
+
+In contrast, models like VACE~\cite{jiang2025vace}, along with other subject-consistent video generation methods, often employ image conditioning in the form of tokens, with supplementary embeddings looped into the model through cross-attention layers.
+
+The choice of conditioning mechanism has significant implications, especially regarding temporal modeling and positional embeddings. Rotary Positional Embeddings ~\cite{su2024roformer}, for example, play a critical role. Methods such as Ovi ~\cite{low2025ovi} leverage RoPE aligned with audio inputs to achieve robust speech-video-audio alignment. Conversely, approaches like \recammaster{}~\cite{bai2025recammaster}, which append additional tokens at the end of the sequence, can be limited to producing only a fixed, pre-defined video length, highlighting the crucial interplay between the conditioning strategy and the model's temporal architecture.
+
+
+\todo{don't need repeat citations for near acronym reuse}

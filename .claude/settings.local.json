@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(convert --version)",
+      "Bash(pdftoppm --help)",
+      "Bash(gs --version)",
+      "Bash(python3 -c \"import pdf2image; print\\('pdf2image available'\\)\")",
+      "Bash(python3 -c \"import fitz; print\\('PyMuPDF available'\\)\")",
+      "Bash(python3 -c \"from PIL import Image; print\\('Pillow available'\\)\")",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

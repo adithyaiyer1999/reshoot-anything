@@ -1,0 +1,102 @@
+% CVPR 2026 Paper Template; see https://github.com/cvpr-org/author-kit
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
+% \usepackage{cvpr}              % To produce the CAMERA-READY version
+% \usepackage[review]{cvpr}      % To produce the REVIEW version
+\usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
+% Import additional packages in the preamble file, before hyperref
+\input{preamble}
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+% Please disable hyperref *only* if you encounter grave issues, 
+% e.g. with the file validation for the camera-ready version.
+%
+% If you comment hyperref and then uncomment it, you should delete *.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you should be clear).
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[accsupp]{axessibility}
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\paperID{10} % *** Enter the Paper ID here
+\def\confName{CVPR}
+\def\confYear{2026}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{\method{}: A Self-Supervised Model for In-the-Wild Video Reshooting}
+
+%%%%%%%%% AUTHORS - PLEASE UPDATE
+\author{Avinash Paliwal\and
+Adithya Iyer\and
+Shivin Yadav\and
+Muhammad Ali Afridi\and
+Midhun Harikumar\\
+{\normalsize Morphic Inc.}\\
+% {\tt\small avinashpaliwal@tamu.edu}
+% For a paper whose authors are all at the same institution,
+% omit the following lines up until the closing ``}''.
+% Additional authors and addresses can be added with ``\and'',
+% just like the second author.
+% To save space, use either the email address or home page, not both
+% \and
+% Second Author\\
+% Institution2\\
+% First line of institution2 address\\
+% {\tt\small secondauthor@i2.org}
+}
+
+\begin{document}
+% \twocolumn[{
+% \renewcommand\twocolumn[1][]{#1}
+% \maketitle
+% \vspace{-0.25in}
+% \begin{center}
+%   \centering
+%   \vspace{-0.2in}
+%   \includegraphics[width=0.8\linewidth]{figures/teaser.pdf}
+%   \vspace{-0.1in}
+%   % \vspace{-10pt}
+%     \captionof{figure}{\textbf{Reshooting Video from Novel Viewpoints.} We introduce a self-supervised framework for dynamic video reshooting trained on \textit{monocular videos}. \textbf{Top:} We generate pseudo multi-view triplets by sampling distinct crop trajectories (\textcolor{red}{red} for source, \textcolor{blue}{blue} for target) from a single video. As a result, the target view often requires regions occluded in the corresponding source frame. To reconstruct the target object (e.g., the cup and hand), the model must route missing textures from multiple different source frames (indicated \textcolor{blue}{by} \textcolor{red}{colored} \textcolor{teal}{arrows} and matching overlays). This spatial bottleneck compels the model to learn implicit 4D spatiotemporal structures. \textbf{Bottom:} At inference, our model leverages these learned 4D priors to reshoot complex dynamic monocular videos under novel camera trajectories.}
+%   \label{fig:teaser} 
+% \end{center}
+% }
+% ]
+% \input{sec_workshop/0_abstract}    
+% \input{sec_workshop/1_intro}
+% \input{sec_workshop/2_related_work}
+% % \input{sec_workshop/3_background}
+% \input{sec_workshop/4_method}
+% \input{sec_workshop/5_implementation}
+% \input{sec_workshop/6_experiments}
+% \input{sec_workshop/7_conclusion}
+
+% % WARNING: do not forget to delete the supplementary pages from your submission 
+% % \input{sec_workshop/X_suppl}
+% {
+%     \small
+%     \bibliographystyle{ieeenat_fullname}
+%     \bibliography{main}
+% }
+
+% % % WARNING: do not forget to delete the supplementary pages from your submission 
+% \input{sec_workshop/X_suppl}
+
+
+% WARNING: do not forget to delete the supplementary pages from your submission 
+\input{sec_workshop/X_suppl}
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{main}
+}
+
+\end{document}

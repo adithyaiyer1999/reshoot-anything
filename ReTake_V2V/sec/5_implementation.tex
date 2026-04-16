@@ -1,0 +1,15 @@
+
+\section{Implementation Details}
+\label{sec:implementation}
+
+
+\subsection{Dataset Creation}
+\label{sec:dataset_creation}
+
+To curate the dataset for paired video creation, we utilize the publicly available Opensora Plan v0.0.1 Mixkit dataset~\cite{lin2024open}, which comprises 9,194 high-resolution videos. We perform stratified sampling to select 1,000 videos uniformly across different categories as the evaluation set. The remaining 8,194 videos are analyzed for scene boundaries, and longer clips are segmented to produce additional samples for training. The resulting dataset consists of 9,773 five-second videos at 16 fps and 480p resolution. These clips are subsequently used to construct pseudo multi-view training triplets following the method described in Section~\ref{sec:pseudo_view_triplet}.
+
+
+\subsection{Training Details}
+We employ the \textit{Wan2.2-14B Mixture-of-Experts (MoE)} models for all training experiments. The high-noise and low-noise experts are trained independently. All anchor-video ablations are conducted on the high-noise model, as we empirically observe it has a greater influence on camera motion due to its operation during the early denoising timesteps. The low-noise model is trained using black-background anchor videos, without applying the source reconstruction loss, and is shared across all ablation studies.
+
+All model ablations are trained for 1{,}000 steps with a batch size of 24, a learning rate of 1e-5, and the AdamW optimizer with $\beta_1=0.9$ and $\beta_2=0.999$. For all LoRA experiments, we use a rank-512 LoRA on attention and feed-forward layers and train the patchify layer. When adding the source reconstruction loss, we backpropagate on the total objective $\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{MSE}} + \alpha \,\mathcal{L}_{\text{reference}}$, with $\alpha$ set to 0.1.

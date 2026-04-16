@@ -1,0 +1,172 @@
+\clearpage
+\setcounter{page}{1}
+
+% \begin{document}
+
+
+\twocolumn[{
+\renewcommand\twocolumn[1][]{#1}
+
+\maketitlesupplementary
+\begin{center}
+  \centering
+  % \vspace{-0.2in}
+    \includegraphics[width=\linewidth]{figures/supp_motivation.pdf}
+    % \vspace{-0.25in}
+\captionof{figure}{\textbf{Motivation: Illustrating Failure Modes in Video Reshooting.} This figure highlights common limitations of existing video reshooting methods, motivating our approach.
+\textbf{(Rows 1-2) Anchor-Only Artifacts:} Given a high-quality source video (Row 1), an anchor-only method like \exfd{}~\cite{ex4d} (shown in Row 2) often generates significant ghosting and content inconsistencies. This occurs when the model relies solely on an imperfect anchor video ($V_a$) for geometric guidance and struggles to hallucinate complex details not fully represented in $V_a$.
+\textbf{(Rows 3-4) Loss of Detail in Synthetic-Data Models:} For a given source video (Row 3), synthetic-data trained models, such as \recammaster{}~\cite{bai2025recammaster} (Row 4), can fail to capture intricate spatio-temporal details and object dynamics. In this example, \recammaster{} incorrectly deforms the tennis ball as it moves across the racket.
+\textit{Note on \recammaster{}:} While \recammaster{} demonstrates impressive capabilities in general camera-controlled video generation, this result (obtained from the demo videos on their official project website) highlights that challenges with intricate object dynamics persist even in their best demonstrations, and similar artifacts are evident in their other results.}
+    \label{fig:supp_motivation}
+\end{center}
+}
+]
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_comp1.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Extended Qualitative Comparisons.} Each row displays sample frames from generated videos. Arrows indicate characteristic artifacts in baseline methods, such as loss of fine detail, blurring, or texture distortion. In contrast, our approach consistently demonstrates superior fidelity, accurately reproducing small details and effectively preserving intricate textures from the source video.}
+    \label{fig:supp_comparison1}
+    \vspace{-0.2in}
+\end{figure*}
+
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_comp2.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Extended Qualitative Comparisons.} Each row displays sample frames from generated videos. Arrows indicate characteristic artifacts in baseline methods, as noted previously. Our approach maintains robust geometric fidelity and superior perceptual quality.}
+    \label{fig:supp_comparison2}
+    \vspace{-0.2in}
+\end{figure*}
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_comp3.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Extended Qualitative Comparisons.} Additional examples demonstrating our model's ability to consistently reproduce fine details and preserve intricate textures from the source video across diverse scenes.}
+    \label{fig:supp_comparison3}
+    \vspace{-0.2in}
+\end{figure*}
+
+
+
+% \begin{figure*}
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/supp_comp4.pdf}
+%     \vspace{-0.25in}
+% \caption{}
+%     \label{fig:supp_comparison2}
+%     \vspace{-0.2in}
+% \end{figure*}
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_comp5.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Handling Random Camera Start Points while Maintaining Detail.} We illustrate anchor trajectories initiated from arbitrary viewpoints, causing significant spatial misalignment at the start of generation. Our model successfully handles these large initial viewpoint shifts without compromising quality, consistently preserving fine details and original textures.}
+    \label{fig:supp_comparison5}
+    \vspace{-0.2in}
+\end{figure*}
+
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_comp6.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Handling Random Camera Start Points while Maintaining Detail.} Additional examples of trajectories initiated from arbitrary viewpoints. Our model maintains exceptional stability and texture preservation under these challenging initialization conditions.}
+    \label{fig:supp_comparison6}
+    \vspace{-0.2in}
+\end{figure*}
+
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/supp_crop.pdf}
+    \vspace{-0.25in}
+\caption{\textbf{Extending Capabilities: Generative Outpainting.} Beyond standard video reshooting, our model demonstrates strong generative priors useful for outpainting tasks. In this example, a 2D crop window is shifted significantly towards the bottom-right, revealing a large unseen region. Crucially, unlike standard per-frame outpainting, our approach is full-context. The model attends to the entire input source video simultaneously, leveraging its learned implicit routing to plausibly hallucinate missing content and coherently complete the scene with high temporal stability.}
+    \label{fig:supp_crop}
+    \vspace{-0.2in}
+\end{figure}
+
+
+In this supplementary material, we provide comprehensive implementation details, extended experimental results, and a discussion of potential applications for our video reshooting framework.
+
+
+\section{Motivation} 
+\label{sec:supp_motivation}
+
+Achieving photorealistic video reshooting requires simultaneously maintaining precise geometric alignment with a novel camera trajectory while preserving the intricate textures and dynamic content of the original source video. Existing approaches often struggle to balance these requirements, leading to characteristic failure modes illustrated in Figure~\ref{fig:supp_motivation}. Methods that rely solely on sparse or imperfect anchor videos for conditioning, such as \exfd{}~\cite{ex4d}, are forced to hallucinate missing texture information without ground truth, frequently resulting in deformed textures or severe ghosting artifacts. Conversely, models trained primarily on synthetic datasets, like \recammaster{}~\cite{bai2025recammaster}, often exhibit a domain gap when applied to real-world footage, failing to capture complex physical dynamics and fine-grained details. These limitations motivate our approach, which utilizes a self-supervised framework designed to learn directly from real-world monocular videos and explicitly fuses high-fidelity source textures with anchor-based geometric guidance.
+
+
+\section{Implementation Details}
+\subsection{Diffusion Transformer Configuration}
+\label{sec:diffusion_transformer_config}
+
+Our diffusion transformer is built upon the \textbf{Wan2.2-I2V 14B} model~\cite{wan21}. This base model employs a Mixture-of-Experts (MoE) design, featuring distinct parameter sets specialized for high-SNR (low-noise) and low-SNR (high-noise) regions of the diffusion trajectory. The architecture functions as a Latent Diffusion Model (LDM), performing all video generation within a compressed latent space. Videos are encoded into a latent representation $z \in \mathbb{R}^{C_L \times T_L \times H_L \times W_L}$ by a causal 3D VAE with a U-Net backbone. This VAE temporally compresses the input, mapping the input video frames to $T_L$ latent frames.
+
+The native Wan2.2-I2V model is designed to condition on an image-reference latent, along with a binary mask indicating visible frame locations. Its standard conditioning pathway concatenates this image-reference latent, a $C_M$-channel binary mask, and a $C_L$-channel noisy latent along the channel dimension. This results in a tensor of shape $\mathbb{R}^{(2C_L + C_M) \times T_L \times H_L \times W_L}$, which is then patchified and processed by the DiT blocks utilizing 3D Rotary Positional Embeddings (3D-RoPE).
+
+For our video reshooting task, we adapt this scheme to integrate both anchor and source video information:
+\begin{description}[noitemsep, topsep=0pt, partopsep=0pt, leftmargin=1em, style=unboxed, font=\normalfont\bfseries]
+    \item[Anchor Conditioning Stream] The VAE-encoded anchor latent $z_a$ is concatenated with a $C_L$-channel noise latent $z_n$ and a $C_M$-channel downsampled binary mask $M_a$. This forms a tensor representing the anchor conditional input.
+    \item[Source Conditioning Stream] The VAE-encoded source latent $z_s$ is duplicated along the channel dimension (replacing $z_n$) and then concatenated with an all-ones $C_M$-channel mask $M_s$. 
+\end{description}
+These two conditional inputs are temporally concatenated, leading to a token sequence that is twice as long as standard inference (i.e., $2 \times T_L$ latent frames). We share the parameters of the patchify blocks across both pathways.
+
+To distinguish the positional context of the appended source tokens, we apply a constant offset to their 3D-RoPE along the temporal dimension within the DiT blocks. This offset magnitude is set to 50, which significantly exceeds our maximum number of training latent frames ($T_L = 20$). This decoupling allows us to flexibly change the length of generated videos during inference. The self-attention layers within the DiT blocks attend jointly over all concatenated anchor and source tokens, enabling efficient cross-video knowledge transfer. Finally, we apply rank-512 LoRA fine-tuning to all attention and fully connected layers.
+
+\subsection{Augmentations and Ablation Setup}
+\label{sec:augmentations_ablation_setup}
+
+As introduced in the main paper, we implement several technical augmentations designed to enhance model robustness and visual quality.
+
+\begin{description}[noitemsep, topsep=0pt, partopsep=0pt, leftmargin=0pt, style=unboxed, font=\normalfont\bfseries]
+    \item[Auxiliary Loss] To ensure the source token pathway actively retains meaningful content, we apply an L1 reconstruction loss between the output tokens corresponding to the source video and the VAE-encoded clean source latent $z_s$. This loss is weighted by a factor of 0.1.
+    
+    \item[Fluorescent Background Anchor] In standard anchor video generation, regions representing new viewpoints or disocclusions are filled with a black background. However, for dark scenes, the model struggles to distinguish masked regions from actual dark content. We found that replacing the standard black background with a high-contrast fluorescent pink color provides a distinct signal for the model, making the boundary of missing information unambiguous.
+
+    \item[Random Query] Our default anchor generation warps the first frame of the source video ($V_s[0]$) to create $V_a$. However, to make the training process more robust to diverse tracking conditions, we introduce an augmentation where the reference frame for dense tracking and warping is randomly selected within the source video ($V_s[t]$). This prevents the model from developing a bias towards early frames and encourages sustained attention to geometric guidance throughout the sequence.
+
+    \item[3D Noise in Anchor] A potential issue arises when the synthesized anchor video ($V_a$) closely resembles the target video ($V_t$), tempting the model to directly copy texture from $V_a$ instead of routing from $V_s$. To suppress $V_a$'s texture information while preserving its 3D geometric guidance, we inject Gaussian noise into the RGB values of the reference frame ($V_s[t]$) \textit{before} it is forward-warped. The noise magnitude is sampled uniformly between [0, 0.5] per channel. Unlike injecting noise \textit{after} warping, pre-warping noise ensures that the noise itself moves coherently with the underlying 3D structure. This forces the model to rely on $V_s$ for high-fidelity content while still inferring motion from $V_a$.
+\end{description}
+
+
+\subsection{Anchor Generation for Inference}
+\label{sec:inference_anchor_gen}
+
+While our self-supervised training pipeline utilizes efficient 2D warping, during inference we utilize an explicit 3D projection approach to define the target camera trajectory. We extract dense geometric information from the source video using state-of-the-art monocular depth and camera estimation models~\cite{huang2025vipe, xu2025geometrycrafter, 4d_recon_hu2025depthcrafter}. Using these depth maps and camera parameters, we unproject the source video pixels into 3D world space, resulting in a consistent, colored point cloud. Finally, to generate an anchor frame corresponding to a target camera pose, we re-render this 3D point cloud from the novel viewpoint, utilizing the input cameras to cancel out the original camera motion.
+
+\subsection{Evaluation}
+
+\textbf{Dataset.} We constructed a final set of 100 videos, sub-sampled from 1,000 stratified examples from the Opensora-mixkit dataset~\cite{lin2024open}. Videos were randomly assigned 1 of 10 predefined camera motion trajectories. To ensure balanced movement representation, we calculated the mean value of the generated anchor mask ($M_a$) for each video, grouped them by trajectory, and selected the 10 videos nearest to their respective group median. This mitigates outliers with extreme mask presence while preserving the underlying semantic distribution.
+
+\textbf{Metrics.} We evaluate along three key dimensions:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \textit{Camera Accuracy:} We measure Rotational Error (RotErr) and Translational Error (TransErr) following~\cite{camera_traj_he2024cameractrl}. We extract camera poses using~\cite{huang2025vipe}, align the first frame, and calculate relative poses between the generated and ground-truth trajectories. TransErr is the sum of squared L2 distances, and RotErr is the sum of angular differences.
+    \item \textit{View Synchronization:} To assess perceptual similarity, we calculate the Fréchet Video Distance (FVD-V)~\cite{eval_unterthiner2019fvd} between the source videos and generated outputs. For semantic synchronization, we use CLIP-V, the average frame-wise CLIP cosine similarity at matching timestamps. For fine-grained spatial alignment, we use Matching Pixels (Mat. Pix) via the GIM model~\cite{eval_matpix}, counting geometrically-verified (RANSAC) feature matches that exceed a confidence threshold of 0.5.
+    \item \textit{Video Quality:} We utilize the VBench benchmark~\cite{eval_huang2024vbench} for perceptual quality. To evaluate temporal consistency, we compute CLIP-F, the average CLIP similarity score of adjacent generated frames.
+\end{itemize}
+
+\subsection{Extended Qualitative Comparisons and Applications} 
+\label{sec:supp_comparisons}
+
+
+
+To provide a comprehensive visual analysis, we present extended qualitative comparisons in Figures~\ref{fig:supp_comparison1}, \ref{fig:supp_comparison2}, and \ref{fig:supp_comparison3}. Baseline methods frequently exhibit characteristic artifacts, such as severe blurring, geometric distortion, or the loss of fine-grained details present in the source input. In contrast, our approach consistently demonstrates superior visual fidelity by effectively leveraging the stable scene priors provided by the source-video conditioning.
+
+Furthermore, Figures~\ref{fig:supp_comparison5} and \ref{fig:supp_comparison6} demonstrate the robustness of our model to challenging initialization conditions, enabled by our Random Query augmentation. Even when target trajectories initiate from random viewpoints causing massive spatial misalignment at the first frame, our model exhibits remarkable stability.
+
+Finally, we highlight the versatility of our generative framework. Beyond standard reshooting, Figure~\ref{fig:supp_crop} illustrates the model's capacity for generative outpainting. When subjected to extreme 2D cropping that reveals previously unseen regions, the model does not simply hallucinate content frame-by-frame. Instead, it performs full-context outpainting. By attending to the entire source video sequence simultaneously via our conditioning architecture, the model can route available texture information from other temporal frames to plausibly and coherently fill the missing regions, ensuring strict temporal consistency.

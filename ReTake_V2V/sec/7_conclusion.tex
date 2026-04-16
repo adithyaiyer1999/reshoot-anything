@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper introduces a novel self-supervised framework for in-the-wild video reshooting, effectively addressing the inherent challenges of acquiring extensive multi-view datasets. By generating pseudo multi-view training triplets solely from abundant monocular video, our approach bypasses the need for explicit 3D annotations or multi-camera setups. We achieve this through a sophisticated conditioning architecture within a DiT-based model, leveraging techniques like Offset RoPE and a unique integration of source and anchor video information.
+
+Our method demonstrates state-of-the-art performance across critical dimensions of video reshooting: camera accuracy, view synchronization, and overall video quality. Notably, the strategic incorporation of the source video as a conditioning signal proves pivotal, leading to significantly enhanced visual fidelity and temporal coherence, as confirmed by comprehensive quantitative metrics and qualitative assessments. Furthermore, our ablation studies confirm the crucial role of augmentations such as adaptive anchor mask background treatment and 3D-aware noise injection in fostering robustness and generalization.
+
+Ultimately, our work enables high-fidelity video reshooting that is both 3D-aware and robust, opening new avenues for creative content generation, virtual production, and immersive experiences from readily available single-view footage. Future work could explore extending our framework to support interactive viewpoint control or integrating with real-time tracking systems for live applications.

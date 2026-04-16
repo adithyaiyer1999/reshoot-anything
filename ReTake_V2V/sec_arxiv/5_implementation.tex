@@ -1,0 +1,34 @@
+
+\section{Implementation Details}
+\label{sec:implementation}
+
+
+\subsection{Dataset Creation and Hybrid Strategy}
+\label{sec:dataset_creation}
+
+Our primary training data consists of approximately 100,000 clips extracted from 30,000 high-resolution, in-the-wild monocular videos using our smooth random-walk cropping pipeline (Sec.~\ref{sec:pseudo_view_triplet}). While training exclusively on this data yields high-quality outputs for standard trajectories, we observed limited generalization to extreme camera motions, such as 120-degree orbital camera rotations.
+
+Because manually curating real-world videos with sweeping camera motion is difficult, we introduce a hybrid strategy. We augment our training pool with a 15\% mixture of paired multi-view synthetic data from a random subset of \recammaster{}~\cite{bai2025recammaster}. As analyzed in our ablation studies (Sec.~\ref{sec:ablations}), this deliberate combination allows the model to learn extreme camera path alignment from the synthetic data while securely grounding its complex physics and textures in the real-world dataset. We highlight this in Fig.~\ref{fig:hybrid_ablation}.
+
+The processing for this synthetic mixture mirrors our monocular pipeline, utilizing forward warping to generate anchor videos by tracking relative motion between the two video sequences. Complete processing details and visualizations are deferred to the Supplementary Material.
+
+\subsection{Architectural Configurations}
+\label{sec:arch_configs}
+
+We build our architecture upon the \textit{Wan2.2-14B Mixture-of-Experts (MoE)} video diffusion model~\cite{wan21}. To process dual video inputs via custom token-based conditioning, both the anchor ($V_a$) and source video ($V_s$) are encoded by the pre-trained causal 3D VAE into $T_L = 20$ latent frames.
+
+The Anchor conditioning stream concatenates the VAE-encoded anchor latent ($z_a$) with a noise latent ($z_n$) and a downsampled binary mask ($M_a$) indicating valid generation regions. The Source conditioning stream duplicates the source latent ($z_s$) to replace the noise channels, concatenating it with an all-ones mask ($M_s$) to leverage all source content. These prepared streams are temporally concatenated, yielding a token sequence twice as long as standard inference ($2 \times T_L$ latent frames).
+
+To distinguish the positional context of these streams, we apply an Offset RoPE. A constant offset of 50 is added to the 3D-RoPE temporal embeddings of the source tokens. Because this offset significantly exceeds our maximum training latent frames ($T_L = 20$), it strictly decouples the source condition's perceived temporal position from the target's active denoising trajectory.
+
+
+
+\subsection{Training Details}
+\label{sec:training_details}
+
+The high-noise and low-noise MoE experts are trained independently. We empirically observe that the high-noise model exerts significantly greater influence on camera motion due to its operation during early denoising timesteps. Consequently, all anchor-video ablations are conducted exclusively on the high-noise model. The low-noise model is trained using standard black-background anchors without the source reconstruction loss, and is shared across all ablations to ensure fair comparisons.
+
+To prevent the model from directly copying anchor video textures, we inject 3D-aware Gaussian noise into the reference frame's RGB values prior to forward warping. The noise magnitude is sampled from a uniform distribution between [0, 0.5] per channel on normalized images.
+
+All variants are trained for 2K steps with a batch size of 24, a 1e-5 learning rate, and the AdamW optimizer ($\beta_1=0.9$, $\beta_2=0.999$). To efficiently adapt the 14B parameter backbone, we apply a rank-512 LoRA on the attention and feed-forward layers and fully train the patchify layer. When incorporating the source reconstruction loss for high-fidelity texture routing, we compute an L1 loss between the output source tokens and the clean source latent. We backpropagate on the total objective $\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{MSE}} + \alpha \,\mathcal{L}_{\text{reference}}$, with $\alpha$ set to 0.1.
+

@@ -1,0 +1,157 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage[rebuttal]{cvpr}
+
+% Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor} % Ensure color support for reviewer macros
+
+% Import additional packages in the preamble file, before hyperref
+\input{preamble}
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex. (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+% \usepackage[scale=0.85]{geometry}  % tighter than 0.85
+% \usepackage[margin=0.8in,footskip=0.25in]{geometry}
+
+% Custom macros for Reviewer highlighting
+\newcommand{\fv}[1]{{\color{Red}\textbf{#1}}}   % Reviewer 1 (rzBc)
+\newcommand{\sv}[1]{{\color{Green}\textbf{#1}}} % Reviewer 2 (YXFs)
+\newcommand{\tv}[1]{{\color{Blue}\textbf{#1}}}  % Reviewer 3 (C3Fn)
+
+% % Reset counters if you want to avoid overlap with main paper
+% \setcounter{figure}{8} 
+% \setcounter{table}{4} 
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\paperID{*****} % *** Enter the Paper ID here
+\def\confName{CVPR}
+\def\confYear{2026}
+
+\begin{document}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{\vspace{-0.55cm}Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting\vspace{-0.45cm}} 
+
+\maketitle
+\thispagestyle{empty}
+\appendix
+
+\noindent We thank the reviewers for their constructive feedback and will incorporate the suggested changes. Our work demonstrates that \textit{simple objectives yield robust generalization}. By prioritizing a scalable data synthesis pipeline, we enforce implicit 4D learning directly from monocular video; this approach is applicable with diverse internet-scale datasets to domain-specific collections (e.g., robotics), enabling applications across varied video distributions. \textit{We commit to releasing our code and model weights upon publication.}
+
+% \noindent We thank the reviewers for their constructive feedback and will incorporate the suggested changes. Our work demonstrates that \textit{simple objectives yield robust generalization}. By prioritizing a scalable data synthesis pipeline, we enforce implicit 4D learning directly from monocular videos; this approach naturally scales from diverse internet-scale datasets to domain-specific collections (e.g., robotics), enabling high performance across varied distributions.
+
+% =================================================================
+% REVIEWER 1 (rzBc)
+% =================================================================
+% 
+\noindent \fv{R1Q1-Backbone}
+Retraining all baselines is challenging as each method relies on distinct architectures/schedules, and official training-preprocessing scripts are often unavailable. Instead, we attempt to isolate contributions via ablations (Table~\ref{tab:ablations}, Fig.~\ref{fig:rebuttal_fig}). Removing the source video (Ex-4D style) degrades texture, confirming the need for source-querying. Furthermore, synthetic-only training (ReCamMaster) lacks the diversity of our scalable real-world data. We will add further backbone ablations in the final version.
+
+
+\noindent \fv{R1Q2-Rotation}
+While crops induce 2D translation, combining \textit{moving crops} with \textit{single-frame anchors} forces 4D spatiotemporal learning. Since the anchor is a warped single frame, it contains holes due to occlusion. The model cannot simply copy-paste from the source because: (1) Random cropping creates spatial misalignment, and (2) \textit{Information Erasure}: cropping often removes the disoccluded region from the current source frame. This prevents 2D search, compelling the model to query other temporal frames (see Fig. 4 of main paper). As requested, we provide challenging examples with large camera rotation in Fig.~\ref{fig:rebuttal_fig}.
+
+
+\noindent \fv{R1Q3-EPiC}
+As discussed in our paper [36], EPiC relies solely on projected anchor without querying the full source video. As the camera moves, the anchor accumulates artifacts; lacking source video access, EPiC overfits to the noisy anchor texture and geometry (e.g., texture drift in their examples). In contrast, we use the anchor only as a guide while retrieving clean texture from the source. This also allows us to support arbitrary first-frame camera pose, unlike most other approaches.
+% As noted in our paper [36], EPiC uses similar warping but differs fundamentally by lacking a reference video. Relying solely on the first frame forces it to hallucinate disoccluded regions, leading to texture drift and anchor overfitting. For instance, in their provided examples (dog, landscape), background structures shift inconsistently because the model cannot access true texture visible in later frames. In contrast, our method queries the full source video to retrieve details, ensuring source-consistent generation.
+
+
+\noindent \fv{R1Q4-Conditioning} 
+Early explorations with various conditioning methods (e.g., Cross-Attention) showed significantly slower convergence. Table~\ref{tab:ablations} confirms that Cross-Attention performs poorly across all metrics compared to our approach. Consistent with ReCamMaster [1], token concatenation effectively leverages the pre-trained self-attention mechanism to retrieve source details directly.
+
+% =================================================================
+% COMBINED FIGURE AND TABLE 
+% =================================================================
+
+\begin{figure}[h]
+    \centering
+    
+    % --- TABLE ---
+    \makeatletter\def\@captype{table}\makeatother 
+    \caption{Additional Ablations.}
+    \vspace{-0.30cm}
+    \label{tab:ablations}
+    \setlength\tabcolsep{3.2pt}
+    \centering
+    \resizebox{0.95\linewidth}{!}{
+    \begin{tabular}{l|cc|ccc}
+    \toprule
+    \multirow{2}{*}{Method} 
+     & \multicolumn{2}{c|}{Camera Accuracy}
+     & \multicolumn{3}{c}{View Synchronization} \\
+     % \cmidrule(lr){2-3} \cmidrule(lr){4-6} 
+     & RotErr $\downarrow$
+     & TransErr $\downarrow$
+     & Mat. Pix $\uparrow$
+     & FVD $\downarrow$
+     & CLIP-V  $\uparrow$ \\
+    \midrule
+     w/o Source (like EX-4D) & 4.82 & 11.65 & 226.01 & 662.09 & 89.97 \\
+     Synthetic Data Only
+     & 3.70 & 5.04 & 1746.78 & 608.03 & 91.86 \\
+     Conditioning: Cross-Attention
+     & 3.53 & 4.31 & 1766.08 & 626.37 & 91.64 \\
+    % \midrule
+     \textbf{Ours} & \textbf{2.76} & \textbf{4.23} & \textbf{2720.83} & \textbf{586.24} & \textbf{93.16} \\
+    \bottomrule
+    \end{tabular}
+    }
+
+
+    \vspace{0.05cm} 
+    
+    % --- FIGURE ---
+    \makeatletter\def\@captype{figure}\makeatother
+    \includegraphics[width=\linewidth]{figures/rebuttal.pdf} 
+    \vspace{-0.5cm}
+    \caption{Additional visual results and comparisons.}
+    \label{fig:rebuttal_fig}
+    \vspace{-1.05cm}
+    
+\end{figure}
+
+
+% =================================================================
+% REVIEWER 2 (YXFs) - Addressed FIRST due to the factual error
+% =================================================================
+
+\noindent \sv{R2Q1-Inference}
+We apologize for the confusion and clarify that our method does not require ground truth target videos at inference. The flow computation (Sec. 3.1.1) is strictly a training-time proxy. During inference, we generate the anchor by using a video depth estimation model to project source pixels into the target trajectory [14]. This constructs geometric guidance without access to the target video. Please see Supplementary Sec. 2.3 and Fig.~\ref{fig:rebuttal_fig} (bottom) for details (we will clarify this in the final version).
+
+
+\noindent \sv{R2Q2-Dynamic Motion}
+Regarding dynamic motion, we clarify that the anchor video inherits motion directly from the source video. Since we perform depth-based warping on a \textit{per-frame} basis, the resulting anchor naturally preserves all dynamic object motion present in the source sequence, without requiring ground truth flow.
+
+
+\noindent \sv{R2Q3-Empty Anchor.} 
+Moving away from the source results in an empty anchor. While the model attempts to align with the user trajectory, generating content without geometric guidance is challenging. Future work could address this via a hybrid training scheme (partial anchors + camera poses) to enable generation even when the anchor is blank.
+
+% =================================================================
+% REVIEWER 3 (C3Fn)
+% =================================================================
+
+\noindent \tv{R3Q1-Minimal Translation} 
+We clarify that our learning signal stems from the \textit{combination} of moving crops and the single-frame anchor. As detailed in \fv{R1Q2}, cropping often removes these disoccluded regions from the current frame, preventing simple copying. This compels the model to search temporally across the video to reconstruct the frame, enforcing 4D consistency.
+
+
+\noindent \tv{R3Q2-360$^\circ$videos}
+We agree 360$^\circ$ videos offer valuable angular diversity. Our pipeline is general-purpose and can easily ingest them (via cropping/perspective correction). However, our key advantage is unlocking \textit{Internet-Scale Data}. While high-quality 360$^\circ$ datasets are relatively scarce, our method leverages the abundance of standard perspective videos. We demonstrate that monocular crops provide sufficient supervision for robust 4D learning, allowing us to scale beyond the limits of specialized datasets and systems.
+
+
+\noindent \tv{R3Q3-Novelty} 
+Ref [4] (\textit{XFactor}, arXiv) targets \textit{Static} Novel View Synthesis. Our work tackles the more challenging \textit{Dynamic Video-to-Video Generation}, requiring the model to handle non-rigid motion (e.g., smoke) and temporal consistency, which static NVS methods cannot address.
+
+
+\noindent \tv{R3Q4-Experiments}
+Ex-4D relies solely on an anchor without source-video conditioning, creating artifacts in non-rigid scenes or when the anchor is noisy. Our method conditions on both, allowing the model to retrieve clean texture from the source. We show some examples in  the \textit{supplementary results}, where the visualizations reveal a significant gap in quality compared to our approach.
+
+
+\end{document}
