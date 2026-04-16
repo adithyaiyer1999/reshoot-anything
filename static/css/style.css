@@ -310,7 +310,7 @@ p:last-child { margin-bottom: 0; }
 }
 
 .pipeline-item video {
-  width: 220px;
+  width: clamp(140px, 18vw, 220px);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: #000;

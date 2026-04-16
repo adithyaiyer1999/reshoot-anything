@@ -108,11 +108,11 @@
     </div>
 
     <h3 style="text-align:center;margin-top:36px;margin-bottom:16px;">Pipeline in Action</h3>
-    <p style="text-align:center;color:var(--muted);font-size:14px;margin-bottom:20px;">
-      Input video &rarr; 4D Point Cloud anchor render &rarr; Reshooting result
-    </p>
 
-    <!-- Pipeline example 1 -->
+    <!-- Example 1: full inference pipeline -->
+    <p style="text-align:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">
+      Inference — input &rarr; anchor &rarr; reshooting result
+    </p>
     <div class="pipeline-row">
       <div class="pipeline-item">
         <video data-autoplay muted loop playsinline>
@@ -127,10 +127,20 @@
         </video>
         <span class="pipeline-label">4D Point Cloud Anchor</span>
       </div>
+      <div class="pipeline-arrow">&#8594;</div>
+      <div class="pipeline-item">
+        <video data-autoplay muted loop playsinline>
+          <source src="cvpr26v2v/ablations/cvpr_2026_results_jan06_scaling_80k_ckpt1400_video_165.mp4" type="video/mp4" />
+        </video>
+        <span class="pipeline-label">Reshooting Result</span>
+      </div>
     </div>
 
-    <!-- Pipeline example 2 -->
-    <div class="pipeline-row" style="margin-top:20px;">
+    <!-- Example 2: full inference pipeline (input → anchor → reshooting) -->
+    <p style="text-align:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:32px;margin-bottom:12px;">
+      Inference — input &rarr; anchor &rarr; reshooting result
+    </p>
+    <div class="pipeline-row">
       <div class="pipeline-item">
         <video data-autoplay muted loop playsinline>
           <source src="cvpr26v2v/ablations/78_82_input.mp4" type="video/mp4" />
@@ -143,6 +153,13 @@
           <source src="cvpr26v2v/ablations/render_pink78.mp4" type="video/mp4" />
         </video>
         <span class="pipeline-label">4D Anchor (cam 78)</span>
+      </div>
+      <div class="pipeline-arrow">&#8594;</div>
+      <div class="pipeline-item">
+        <video data-autoplay muted loop playsinline>
+          <source src="cvpr26v2v/ablations/78output.mp4" type="video/mp4" />
+        </video>
+        <span class="pipeline-label">Reshooting Result</span>
       </div>
     </div>
   </div>
@@ -243,54 +260,64 @@
   <div class="container">
     <h2>Inference Example</h2>
     <p style="text-align:center;color:var(--muted);font-size:14px;margin-bottom:28px;">
-      Given one input video we reshooot it from two different anchor camera trajectories simultaneously.
+      Given one input video we reshoot it from two different anchor camera trajectories simultaneously.
     </p>
 
-    <!-- Header row -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px;">
-      <p class="video-label" style="margin:0;text-align:center;">Input Video</p>
-      <p class="video-label" style="margin:0;text-align:center;">Anchor Camera 78</p>
-      <p class="video-label" style="margin:0;text-align:center;">Anchor Camera 82</p>
-    </div>
+    <!--
+      Layout:
+        [  Input (vertically centred)  ] [ Anchor Camera  |  Reshooting Result ]   ← top pair
+                                         [ Anchor Camera  |  Reshooting Result ]   ← bottom pair
+    -->
+    <div style="display:flex;align-items:center;gap:24px;max-width:860px;margin:0 auto;">
 
-    <!-- Row 1: input + two anchors -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:4px;">
-      <div>
+      <!-- Left: input video, vertically centred -->
+      <div style="flex:0 0 auto;width:260px;text-align:center;">
         <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
           <source src="cvpr26v2v/ablations/78_82_input.mp4" type="video/mp4" />
         </video>
-        <p class="video-label">Input</p>
+        <p class="video-label" style="margin-top:6px;">Input Video</p>
       </div>
-      <div>
-        <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-          <source src="cvpr26v2v/ablations/78anchor.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Anchor 78</p>
-      </div>
-      <div>
-        <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-          <source src="cvpr26v2v/ablations/82anchor.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Anchor 82</p>
-      </div>
-    </div>
 
-    <!-- Row 2: output -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;">
-      <div></div>
-      <div>
-        <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-          <source src="cvpr26v2v/ablations/78output.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Reshooting (cam 78)</p>
-      </div>
-      <div>
-        <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-          <source src="cvpr26v2v/ablations/82output.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Reshooting (cam 82)</p>
-      </div>
-    </div>
+      <!-- Arrow -->
+      <div style="font-size:28px;color:var(--accent);font-weight:700;flex:0 0 auto;">&#8594;</div>
+
+      <!-- Right: two rows stacked -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Top pair: anchor + output (cam 78) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="text-align:center;">
+            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
+              <source src="cvpr26v2v/ablations/78anchor.mp4" type="video/mp4" />
+            </video>
+            <p class="video-label" style="margin-top:6px;">Anchor Camera</p>
+          </div>
+          <div style="text-align:center;">
+            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
+              <source src="cvpr26v2v/ablations/78output.mp4" type="video/mp4" />
+            </video>
+            <p class="video-label" style="margin-top:6px;">Reshooting Result</p>
+          </div>
+        </div>
+
+        <!-- Bottom pair: anchor + output (cam 82) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="text-align:center;">
+            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
+              <source src="cvpr26v2v/ablations/82anchor.mp4" type="video/mp4" />
+            </video>
+            <p class="video-label" style="margin-top:6px;">Anchor Camera</p>
+          </div>
+          <div style="text-align:center;">
+            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
+              <source src="cvpr26v2v/ablations/82output.mp4" type="video/mp4" />
+            </video>
+            <p class="video-label" style="margin-top:6px;">Reshooting Result</p>
+          </div>
+        </div>
+
+      </div><!-- end right column -->
+    </div><!-- end flex wrapper -->
   </div>
 </section>
 

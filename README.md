@@ -15,7 +15,7 @@ CVPR 2026 paper website for **"Reshoot-Anything: A Self-Supervised Model for In-
    ```
 3. Go to **Settings → Pages** in your repository.
 4. Under **Source**, select **Deploy from a branch** → branch `main`, folder `/ (root)`.
-5. Click **Save**. Your site will be live at `https://<your-username>.github.io/reshoot-anything/` within a minute or two.
+5. Click **Save**. Your site will be live at `https://adithyaiyer1999.github.io/reshoot-anything/` within a minute or two.
 
 ## File structure
 
