@@ -3,15 +3,15 @@
    ============================================================ */
 
 :root {
-  --accent: #2563eb;
-  --accent-light: #dbeafe;
+  --accent: #000000;
+  --accent-light: #f0f0f0;
   --bg: #ffffff;
-  --surface: #f8fafc;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --muted: #64748b;
-  --code-bg: #f1f5f9;
-  --radius: 8px;
+  --surface: #f7f7f7;
+  --border: #d0d0d0;
+  --text: #111111;
+  --muted: #555555;
+  --code-bg: #f4f4f4;
+  --radius: 6px;
   --max-width: 960px;
 }
 
@@ -158,14 +158,14 @@ h1 {
 }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: #111111;
+  border-color: #111111;
   color: #fff;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: #333333;
+  border-color: #333333;
   color: #fff;
 }
 
@@ -378,8 +378,8 @@ tr.separator td {
 }
 
 .bold { font-weight: 700; }
-.ours-row { background: #eff6ff; }
-.ours-row td:first-child { font-weight: 700; color: var(--accent); }
+.ours-row { background: #f0f0f0; }
+.ours-row td:first-child { font-weight: 700; color: #111111; }
 
 .best { font-weight: 700; text-decoration: underline; text-decoration-color: var(--accent); }
 
