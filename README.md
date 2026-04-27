@@ -1,6 +1,6 @@
 # Reshoot-Anything — Paper Website
 
-CVPR 2026 paper website for **"Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting"**.
+CVPR 2026 paper website for **"Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting"**. : https://arxiv.org/abs/2604.21776
 
 ## Hosting on GitHub Pages
 
