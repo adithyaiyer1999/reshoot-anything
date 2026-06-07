@@ -1,602 +1,744 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting</title>
-  <meta name="description" content="We present a self-supervised framework for video reshooting that trains from in-the-wild monocular videos, enabling state-of-the-art camera control and temporal consistency on complex dynamic scenes." />
-  <meta property="og:title" content="Reshoot-Anything" />
-  <meta property="og:description" content="Self-supervised video reshooting from monocular internet video." />
-  <link rel="stylesheet" href="static/css/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting</title>
+<meta name="description" content="A self-supervised framework that reshoots dynamic video from a new camera path, trained entirely on monocular footage. CVPR 2026 Workshop.">
+
+<link rel="canonical" href="https://adithyaiyer1999.github.io/reshoot-anything/">
+<link rel="icon" type="image/png" href="static/images/morphic-logo.webp">
+<link rel="apple-touch-icon" href="static/images/morphic-logo.webp">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://adithyaiyer1999.github.io/reshoot-anything/">
+<meta property="og:title" content="Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting">
+<meta property="og:description" content="A self-supervised framework that reshoots dynamic video from a new camera path, trained entirely on monocular footage. CVPR 2026 Workshop.">
+<meta property="og:image" content="https://adithyaiyer1999.github.io/reshoot-anything/static/images/teaser.webp">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reshoot-Anything">
+<meta name="twitter:description" content="Self-supervised video reshooting from a new camera path. CVPR 2026 Workshop.">
+<meta name="twitter:image" content="https://adithyaiyer1999.github.io/reshoot-anything/static/images/teaser.webp">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting",
+  "author": [
+    {"@type":"Person","name":"Avinash Paliwal","url":"http://avinashpaliwal.com/"},
+    {"@type":"Person","name":"Adithya Iyer","url":"https://adithyaiyer1999.github.io/"},
+    {"@type":"Person","name":"Shivin Yadav"},
+    {"@type":"Person","name":"Muhammad Ali Afridi"},
+    {"@type":"Person","name":"Midhun Harikumar"}
+  ],
+  "datePublished": "2026-06-05",
+  "publisher": {"@type":"Organization","name":"Morphic","url":"https://morphic.com/"},
+  "url": "https://adithyaiyer1999.github.io/reshoot-anything/",
+  "sameAs": "https://arxiv.org/abs/2604.21776",
+  "isPartOf": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0a0a0d;
+  --bg2:#101015;
+  --ink:#f4f1ec;
+  --ink-dim:#a7a39c;
+  --ink-faint:#8d8a83;
+  --pink:#ff4d97;
+  --pink-soft:#ff7eb3;
+  --line:rgba(255,255,255,.10);
+  --line-strong:rgba(255,255,255,.18);
+  --serif:"Fraunces",Georgia,serif;
+  --sans:"IBM Plex Sans",sans-serif;
+  --mono:"IBM Plex Mono",monospace;
+  --maxw:1240px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-weight:300;line-height:1.6;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 1px 1px,rgba(255,255,255,.045) 1px,transparent 0);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 35%,#000 30%,transparent 90%);
+          mask-image:radial-gradient(ellipse 90% 80% at 50% 35%,#000 30%,transparent 90%);
+  opacity:.6;
+}
+.wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,4vw,40px)}
+
+/* TYPE */
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.012em;line-height:1.05}
+h1{font-size:clamp(2.6rem,6.2vw,5.4rem)}
+h1 .pink{color:var(--pink);font-style:italic}
+h2{font-size:clamp(1.9rem,3.8vw,3rem);margin-bottom:1.2rem;text-wrap:balance}
+h3{font-size:clamp(1.2rem,2vw,1.6rem)}
+p{color:var(--ink-dim)}
+a{color:var(--pink);text-decoration:none}
+em{color:var(--pink-soft);font-style:italic}
+b,strong{color:var(--ink);font-weight:500}
+
+.kicker{
+  font-family:var(--mono);font-size:.88rem;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--pink);
+  display:inline-flex;align-items:center;gap:.95rem;margin-bottom:1.6rem;
+}
+.kicker::before{content:"";width:36px;height:1px;background:var(--pink)}
+
+/* HEADER (minimal) */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.05rem clamp(20px,4vw,40px);
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);
+  background:linear-gradient(180deg,rgba(10,10,13,.85),rgba(10,10,13,0));
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.topbar .brand b{color:var(--pink)}
+.topbar nav{display:flex;gap:1.8rem}
+.topbar nav a{color:var(--ink-faint);transition:color .2s}
+.topbar nav a:hover{color:var(--ink)}
+@media(max-width:720px){.topbar nav{display:none}}
+
+/* HERO */
+.hero{padding:8.5rem 0 4.5rem;position:relative;text-align:center}
+.hero .venue{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:2rem;display:inline-flex;align-items:center;gap:.7rem
+}
+.hero .venue .dot{width:6px;height:6px;border-radius:50%;background:var(--pink);box-shadow:0 0 12px var(--pink)}
+.hero h1{max-width:18ch;margin:0 auto}
+.hero .paper-title{
+  font-family:var(--serif);font-weight:300;font-style:italic;
+  font-size:clamp(1.15rem,2vw,1.55rem);
+  color:var(--ink-dim);margin-top:.9rem;line-height:1.35;
+  letter-spacing:-.005em;
+  text-wrap:balance;
+}
+.authors{
+  margin-top:2.4rem;font-family:var(--mono);font-size:.78rem;letter-spacing:.05em;
+  color:var(--ink);line-height:1.9;
+}
+.authors a{
+  color:inherit;text-decoration:none;
+  border-bottom:1px dotted transparent;transition:.2s;padding-bottom:1px;
+}
+.authors a:hover{color:var(--pink);border-bottom-color:var(--pink)}
+.authors .aff{margin-top:1.2rem}
+.morphic-logo{
+  display:block;height:34px;width:auto;margin:0 auto;
+  mix-blend-mode:screen;opacity:.95;
+}
+.morphic-logo:hover{opacity:1}
+
+.btn-row{margin-top:2.4rem;display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center}
+.btn{
+  font-family:var(--mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink);text-decoration:none;
+  padding:.78rem 1.2rem;border:1px solid var(--line-strong);border-radius:999px;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:.25s;
+}
+.btn:hover{border-color:var(--pink);color:var(--pink);transform:translateY(-2px)}
+.btn.primary{background:var(--pink);color:#0a0a0d;border-color:var(--pink)}
+.btn.primary:hover{background:#fff;border-color:#fff;color:#0a0a0d}
+.btn svg{width:14px;height:14px}
+
+/* HERO VIDEO */
+.hero-vid{margin-top:3.2rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.hero-vid figure{margin:0;position:relative}
+.hero-vid video{
+  width:100%;aspect-ratio:16/9;object-fit:cover;display:block;
+  border-radius:14px;border:1px solid var(--line);background:var(--bg2);
+}
+.hero-vid figure.out video{border-color:rgba(255,77,151,.5);box-shadow:0 30px 80px -32px rgba(255,77,151,.35)}
+.hero-vid figcaption{
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-faint);margin-top:.7rem;
+}
+.hero-vid figure.out figcaption{color:var(--pink)}
+@media(max-width:780px){.hero-vid{grid-template-columns:1fr}}
+
+/* SECTION */
+section{padding:6rem 0;position:relative}
+section.dark{background:var(--bg2)}
+.section-head{max-width:72ch;margin:0 auto 2.8rem;text-align:center}
+.section-head .kicker{display:flex;width:max-content;margin:0 auto 1.2rem}
+.section-head h2{margin:0;max-width:none}
+.section-head p{margin:1rem auto 0;max-width:62ch;font-size:1.18rem;line-height:1.65;font-weight:300;color:var(--ink-dim);text-align:justify;hyphens:auto}
+.section-head p b{color:var(--ink);font-weight:500}
+.section-head.eyebrow-only{margin-bottom:1.4rem}
+
+/* ABSTRACT */
+.abstract-body{
+  font-family:var(--serif);font-size:1.22rem;line-height:1.7;
+  color:var(--ink-dim);font-weight:300;
+  max-width:68ch;margin:0 auto;
+  text-align:justify;hyphens:auto;
+}
+.abstract-body b{color:var(--ink);font-weight:500}
+.abstract-body em{color:var(--pink-soft);font-style:italic}
+
+/* RESULTS GRID */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-top:2rem}
+.rpair{
+  border:1px solid var(--line);border-radius:14px;padding:.85rem;
+  background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(255,255,255,0));
+  display:flex;align-items:center;gap:.55rem;
+}
+.rcell{flex:1;min-width:0}
+.rcell video{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--bg2);display:block;border:1px solid var(--line)}
+.rcell figcaption{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.5rem;text-align:center}
+.rcell.out video{border-color:rgba(255,77,151,.5)}
+.rcell.out figcaption{color:var(--pink)}
+.rarrow{color:var(--pink);font-size:1.1rem;padding:0 .1rem;flex:0 0 auto}
+@media(max-width:780px){.rgrid{grid-template-columns:1fr}.rpair{flex-direction:column}.rarrow{transform:rotate(90deg)}}
+
+/* PAPER FRAME — white-background research figures embedded in the dark canvas */
+.paper-frame{
+  background:#f5f3ee;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.4rem;
+  margin-top:1.6rem;
+  overflow:hidden;
+  box-shadow:0 28px 70px -34px rgba(0,0,0,.6);
+}
+.paper-frame.compact{max-width:75%;margin-left:auto;margin-right:auto}
+.paper-frame.compact + .paper-caption{max-width:75%;margin-left:auto;margin-right:auto}
+@media(max-width:780px){
+  .paper-frame.compact{max-width:100%}
+  .paper-frame.compact + .paper-caption{max-width:100%}
+}
+.paper-frame img{width:100%;height:auto;display:block;border-radius:6px}
+.paper-caption{
+  font-family:var(--sans);font-size:1.02rem;line-height:1.6;font-weight:300;
+  color:var(--ink-dim);margin-top:1.3rem;
+  text-align:justify;hyphens:auto;
+}
+.paper-caption strong{color:var(--ink);font-weight:500}
+.paper-caption em{color:var(--pink-soft);font-style:italic}
+
+/* METHOD GRID — two-column conceptual blurbs */
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3.5rem}
+.method-grid h3{font-family:var(--serif);font-size:1.5rem;font-weight:400;margin-bottom:.7rem;color:var(--ink);letter-spacing:-.005em}
+.method-grid p{font-family:var(--serif);font-size:1.18rem;line-height:1.6;color:var(--ink-dim);font-weight:300;text-align:justify;hyphens:auto}
+.method-grid p em{color:var(--pink-soft);font-style:italic}
+.method-grid p b{color:var(--ink);font-weight:500}
+@media(max-width:780px){.method-grid{grid-template-columns:1fr;gap:1.8rem}}
+
+/* PIPELINE TRIPLETS — input -> anchor -> result */
+.pipeline-rows{display:flex;flex-direction:column;gap:1rem;margin-top:1.4rem}
+.pipeline-row{
+  display:flex;align-items:center;gap:.5rem;
+  border:1px solid var(--line);border-radius:14px;padding:.65rem;
+  background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(255,255,255,0));
+}
+.pipeline-cell{flex:1;min-width:0}
+.pipeline-cell video{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--bg2);border:1px solid var(--line);display:block}
+.pipeline-cell .plabel{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.5rem;text-align:center;display:block}
+.pipeline-cell.anc .plabel{color:#4cc38a}
+.pipeline-cell.out video{border-color:rgba(255,77,151,.55)}
+.pipeline-cell.out .plabel{color:var(--pink)}
+.pipeline-arrow{flex:0 0 auto;color:var(--pink);font-size:1.1rem;padding:0 .1rem}
+@media(max-width:780px){.pipeline-row{flex-direction:column}.pipeline-arrow{transform:rotate(90deg)}}
+
+/* DATA SURFACE — dense tables inside the dark canvas */
+.data-surface{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--bg2);margin-top:1.8rem;overflow:hidden}
+.data-surface .table-scroll{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  font-variant-numeric:tabular-nums;
+  scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+}
+.data-surface .table-scroll::-webkit-scrollbar{height:6px}
+.data-surface .table-scroll::-webkit-scrollbar-track{background:transparent}
+.data-surface .table-scroll::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+.data-surface table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:.84rem;font-weight:400}
+.data-surface thead{background:rgba(255,255,255,.04)}
+.data-surface thead tr:first-child th{
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:500;padding:.85rem .9rem .5rem;text-align:center;
+  border-bottom:1px solid var(--line);white-space:nowrap;
+}
+.data-surface thead tr:first-child th:not(:first-child){border-left:1px solid var(--line)}
+.data-surface thead tr:last-child th{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:500;padding:.6rem .9rem .85rem;text-align:right;
+  border-bottom:1px solid var(--line);white-space:nowrap;
+}
+.data-surface th.method-col,.data-surface td.method-col{
+  text-align:left !important;position:sticky;left:0;background:var(--bg2);z-index:2;
+  border-right:1px solid var(--line);
+  font-family:var(--sans);font-size:.84rem;font-weight:400;
+  letter-spacing:0;text-transform:none;color:var(--ink);white-space:nowrap;
+  min-width:180px;
+}
+.data-surface tbody td{
+  padding:.72rem .9rem;border-bottom:1px solid rgba(255,255,255,.04);
+  color:var(--ink-dim);text-align:right;font-variant-numeric:tabular-nums;
+}
+.data-surface tbody tr:last-child td{border-bottom:none}
+.data-surface tbody tr.separator td{border-top:1px solid var(--line)}
+.data-surface tbody tr.ours-row td{background:rgba(255,77,151,.045);color:var(--ink)}
+.data-surface tbody tr.ours-row td.method-col{
+  background:linear-gradient(90deg,rgba(255,77,151,.1),rgba(255,77,151,.04));
+  border-left:2px solid var(--pink);padding-left:calc(.9rem - 2px);
+}
+.data-surface tbody td.best{
+  color:var(--ink);font-weight:500;
+  text-decoration:underline;text-decoration-color:var(--pink);
+  text-decoration-thickness:1.5px;text-underline-offset:3px;
+}
+.table-note{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--ink-faint);margin-top:1rem;text-align:center}
+.table-note b{color:var(--ink);font-weight:500}
+
+/* BIBTEX */
+.bibtex-box{
+  position:relative;margin-top:1.6rem;
+  border:1px solid var(--line-strong);border-radius:14px;
+  background:rgba(0,0,0,.35);overflow:hidden;
+}
+.bibtex-box pre{
+  margin:0;padding:1.45rem 1.65rem;
+  font-family:var(--mono);font-size:.82rem;line-height:1.7;
+  color:var(--ink-dim);overflow-x:auto;
+}
+.copy-btn{
+  position:absolute;top:.85rem;right:.85rem;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-faint);background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:999px;
+  padding:.45rem .85rem;cursor:pointer;transition:.2s;
+}
+.copy-btn:hover{border-color:var(--pink);color:var(--pink)}
+.copy-btn.copied{color:#4cc38a;border-color:#4cc38a}
+
+/* FOOT */
+.foot{padding:4rem 0 6rem;text-align:center;color:var(--ink-faint);font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase}
+.foot a{color:var(--ink-dim);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:1px;transition:.2s}
+.foot a:hover{color:var(--pink);border-bottom-color:var(--pink)}
+</style>
 </head>
+
 <body>
 
-<!-- ── Sticky nav ─────────────────────────────────────────── -->
-<header>
+<header class="topbar">
+  <div class="brand"><b>◐</b>&nbsp;&nbsp;Reshoot-Anything</div>
   <nav>
-    <a class="nav-title" href="#">Reshoot-Anything</a>
-    <ul class="nav-links">
-      <li><a href="#abstract">Abstract</a></li>
-      <li><a href="#examples">Examples</a></li>
-      <li><a href="#method">Method</a></li>
-      <li><a href="#results">Results</a></li>
-      <li><a href="#bibtex">BibTeX</a></li>
-    </ul>
+    <a href="#abstract">Abstract</a>
+    <a href="#pipeline">Inference</a>
+    <a href="#method">Method</a>
+    <a href="#examples">Results</a>
+    <a href="#comparisons">Comparisons</a>
+    <a href="#ablations">Ablations</a>
+    <a href="#bibtex">BibTeX</a>
   </nav>
 </header>
 
-<!-- ── Hero ──────────────────────────────────────────────── -->
-<section id="hero">
-  <div class="container">
-    <h1>Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting</h1>
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="venue"><span class="dot"></span>CVPR 2026 Workshop</div>
 
-    <p class="authors">
-      Avinash Paliwal &nbsp;&middot;&nbsp;
-      Adithya Iyer &nbsp;&middot;&nbsp;
-      Shivin Yadav &nbsp;&middot;&nbsp;
-      Muhammad Ali Afridi &nbsp;&middot;&nbsp;
-      Midhun Harikumar
-    </p>
-    <p class="affiliation"><a href="https://morphic.com/" target="_blank" style="color:#111;text-decoration:none;font-weight:600;border-bottom:1.5px solid #111;">Morphic</a></p>
+    <h1>Reshoot-<span class="pink">Anything</span>.</h1>
+    <p class="paper-title">A Self-Supervised Model for In-the-Wild Video Reshooting</p>
 
-    <div class="btn-group">
-      <a class="btn btn-primary" href="https://arxiv.org/pdf/2604.21776" target="_blank">
-        <!-- paper icon -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Paper (PDF)
+    <div class="authors">
+      <div>
+        <a href="http://avinashpaliwal.com/" target="_blank" rel="noopener noreferrer">Avinash Paliwal</a> ·
+        <a href="https://adithyaiyer1999.github.io/" target="_blank" rel="noopener noreferrer">Adithya Iyer</a> ·
+        Shivin Yadav ·
+        Muhammad Ali Afridi ·
+        Midhun Harikumar
+      </div>
+      <div class="aff">
+        <a href="https://morphic.com/" target="_blank" rel="noopener noreferrer" aria-label="Morphic">
+          <img class="morphic-logo" src="static/images/morphic-logo.webp" alt="Morphic">
+        </a>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn primary" href="https://arxiv.org/pdf/2604.21776" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Paper
       </a>
-      <a class="btn" href="https://github.com/morphicfilms/video-to-video" target="_blank">
-        <!-- github icon -->
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.026 2.747-1.026.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z"/></svg>
-        GitHub
-      </a>
-      <a class="btn" href="https://huggingface.co/morphic/reshoot-anything" target="_blank">
-        <!-- HF icon placeholder -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-        HuggingFace
-      </a>
-      <a class="btn" href="https://arxiv.org/abs/2604.21776" target="_blank">
-        <!-- arxiv icon -->
+      <a class="btn" href="https://arxiv.org/abs/2604.21776" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg>
         arXiv
       </a>
+      <a class="btn" href="https://github.com/morphicfilms/video-to-video" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.026 2.747-1.026.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z"/></svg>
+        Code
+      </a>
+      <a class="btn" href="https://huggingface.co/morphic/reshoot-anything" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        HuggingFace
+      </a>
+      <a class="btn" href="#bibtex">BibTeX</a>
     </div>
 
-    <div class="tldr">
-      <strong>TL;DR&nbsp;</strong> Video-to-video models are difficult to train due to the scarcity of paired multi-perspective video data depicting the same action. We solve this by proposing a <strong>self-supervised</strong> method that trains a Video-Reshooting model entirely from in-the-wild monocular videos, achieving state-of-the-art temporal consistency and camera control.
+    <div class="hero-vid">
+      <figure>
+        <video src="cvpr26v2v/results/woman_og.mp4" loop muted playsinline preload="metadata"></video>
+        <figcaption>Input video</figcaption>
+      </figure>
+      <figure class="out">
+        <video src="cvpr26v2v/results/woman_01.mp4" loop muted playsinline preload="metadata"></video>
+        <figcaption>Reshot · new camera path</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
-<!-- ── Abstract ───────────────────────────────────────────── -->
-<section id="abstract">
-  <div class="container">
-    <h2>Abstract</h2>
-    <p style="max-width:780px;margin:0 auto;">
-      Precise camera control for reshooting dynamic videos is bottlenecked by the severe scarcity of paired multi-view data for non-rigid scenes. We overcome this limitation with a highly scalable self-supervised framework capable of leveraging internet-scale monocular videos. Our core contribution is the generation of <strong>pseudo multi-view training triplets</strong>, consisting of a source video, a geometric anchor, and a target video. We achieve this by extracting distinct smooth random-walk crop trajectories from a single input video to serve as the source and target views. The anchor is synthetically generated by forward-warping the first frame of the source with a dense tracking field, which effectively simulates the distorted point-cloud inputs expected at inference. Because our independent cropping strategy introduces spatial misalignment and artificial occlusions, the model cannot simply copy information from the current source frame. Instead, it is forced to implicitly learn <strong>4D spatiotemporal structures</strong> by actively routing and re-projecting missing high-fidelity textures across distinct times and viewpoints from the source video to reconstruct the target. At inference, our minimally adapted diffusion transformer utilizes a 4D point-cloud derived anchor to achieve state-of-the-art temporal consistency, robust camera control, and high-fidelity novel view synthesis on complex dynamic scenes.
-    </p>
+<!-- ABSTRACT -->
+<section id="abstract" class="dark">
+  <div class="wrap">
+    <div class="section-head eyebrow-only">
+      <div class="kicker">Abstract</div>
+    </div>
+    <div class="abstract-body">
+      We present a <b>self-supervised framework for video reshooting</b> that trains entirely from in-the-wild monocular videos. Existing approaches either rely on synthetic data, which breaks on real footage, or stitch together pre-trained 4D reconstructions whose errors propagate. Our key idea is to <b>manufacture multi-view supervision from a single clip</b>: two crop trajectories produce a source and target view of the same dynamic scene, and a forward-warped anchor exposes the disocclusions a new camera path would create. Forced to route textures across space <em>and</em> time, the model <b>learns implicit 4D structure with no 3D supervision</b>, achieving state-of-the-art camera control and temporal consistency on complex dynamic scenes.
+    </div>
   </div>
 </section>
 
-
-<!-- ── Teaser / Training Data ─────────────────────────────── -->
-<section id="teaser">
-  <div class="container">
-    <h2>Training Data Construction</h2>
-    <p style="max-width:760px;margin:0 auto 28px;text-align:center;color:var(--muted);">
-      From a single monocular video we extract two independent crop trajectories (source &amp; target) and synthetically generate a geometric anchor by forward-warping the first source frame with a dense tracking field.
-    </p>
-
-    <div class="figure" style="max-width:860px;">
-      <img src="static/images/teaser.webp" alt="Self-supervised training data construction — teaser figure" />
-      <p class="figure-caption">
-        <strong>Figure 1.</strong> Our self-supervised training data pipeline. Two independent smooth random-walk crop trajectories are extracted from a single input video to form source &amp; target pseudo-views. The anchor is generated via dense-tracking-guided forward-warping, simulating the point-cloud anchors used at inference.
-      </p>
+<!-- INFERENCE PIPELINE -->
+<section id="pipeline">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Inference</div>
+      <h2>From a single video, end to end.</h2>
+      <p>The pipeline at inference: a monocular input drives a 4D point-cloud anchor rendered along a new camera trajectory, and the model refines that anchor into a clean reshoot while preserving the original motion and fine detail.</p>
     </div>
 
-    <h3 style="text-align:center;margin-top:36px;margin-bottom:16px;">Pipeline in Action</h3>
-
-    <!-- Example 1: full inference pipeline -->
-    <p style="text-align:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">
-      Inference — input &rarr; anchor &rarr; reshooting result
-    </p>
-    <div class="pipeline-row">
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/input.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">Input Video</span>
+    <div class="pipeline-rows">
+      <div class="pipeline-row">
+        <figure class="pipeline-cell"><video src="cvpr26v2v/ablations/input.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">Input Video</span></figure>
+        <div class="pipeline-arrow">&rarr;</div>
+        <figure class="pipeline-cell anc"><video src="cvpr26v2v/ablations/render_pink.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">4D Point-Cloud Anchor</span></figure>
+        <div class="pipeline-arrow">&rarr;</div>
+        <figure class="pipeline-cell out"><video src="cvpr26v2v/ablations/cvpr_2026_results_jan06_scaling_80k_ckpt1400_video_165.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">Reshoot Result</span></figure>
       </div>
-      <div class="pipeline-arrow">&#8594;</div>
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/render_pink.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">4D Point Cloud Anchor</span>
-      </div>
-      <div class="pipeline-arrow">&#8594;</div>
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/cvpr_2026_results_jan06_scaling_80k_ckpt1400_video_165.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">Reshooting Result</span>
-      </div>
-    </div>
-
-    <!-- Example 2: full inference pipeline (input → anchor → reshooting) -->
-    <p style="text-align:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:32px;margin-bottom:12px;">
-      Inference — input &rarr; anchor &rarr; reshooting result
-    </p>
-    <div class="pipeline-row">
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/78_82_input.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">Input Video</span>
-      </div>
-      <div class="pipeline-arrow">&#8594;</div>
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/render_pink78.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">4D Anchor (cam 78)</span>
-      </div>
-      <div class="pipeline-arrow">&#8594;</div>
-      <div class="pipeline-item">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/ablations/78output.mp4" type="video/mp4" />
-        </video>
-        <span class="pipeline-label">Reshooting Result</span>
+      <div class="pipeline-row">
+        <figure class="pipeline-cell"><video src="cvpr26v2v/ablations/78_82_input.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">Input Video</span></figure>
+        <div class="pipeline-arrow">&rarr;</div>
+        <figure class="pipeline-cell anc"><video src="cvpr26v2v/ablations/render_pink78.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">4D Point-Cloud Anchor</span></figure>
+        <div class="pipeline-arrow">&rarr;</div>
+        <figure class="pipeline-cell out"><video src="cvpr26v2v/ablations/78output.mp4" loop muted playsinline preload="metadata"></video><span class="plabel">Reshoot Result</span></figure>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Examples ───────────────────────────────────────────── -->
-<section id="examples">
-  <div class="container">
-    <h2>Qualitative Results</h2>
-    <p style="text-align:center;color:var(--muted);font-size:14px;margin-bottom:32px;">
-      Each row shows the <strong>original video</strong> (left) alongside our <strong>reshooting result</strong> (right) from a different camera trajectory.
+<!-- METHOD -->
+<section id="method" class="dark">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Method</div>
+      <h2>We manufacture multi-view supervision from a single video.</h2>
+      <p>Two independent crop trajectories from one monocular clip form a source and a target view. A forward-warped anchor exposes the disocclusions a new camera path would create, and a minimally adapted diffusion transformer routes textures across space and time to reconstruct the target.</p>
+    </div>
+
+    <div class="paper-frame compact">
+      <img src="static/images/teaser.webp" alt="Training data construction from a single monocular video">
+    </div>
+    <p class="paper-caption">
+      <b>Our training data pipeline.</b> From a single monocular video we sample two independent smooth random-walk crop trajectories: one becomes the source view, the other becomes the target view of the same dynamic scene. Because the trajectories disagree spatially, the source frame at any given time cannot be copied directly to produce the target. The model must instead route textures from other source frames where the missing regions were visible, learning to reconstruct one view of a dynamic scene from a different one.
     </p>
 
-    <!-- Woman -->
-    <div class="video-pair">
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/woman_og.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Original</p>
-      </div>
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/woman_01.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Ours (reshooting)</p>
-      </div>
+    <div class="paper-frame">
+      <img src="static/images/video_triplets.webp" alt="Pseudo multi-view triplets on real footage">
     </div>
-
-    <!-- Man -->
-    <div class="video-pair">
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/man_og.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Original</p>
-      </div>
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/man_01.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Ours (reshooting)</p>
-      </div>
-    </div>
-
-    <!-- Car -->
-    <div class="video-pair">
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_og.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Original</p>
-      </div>
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_01.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Ours (reshooting)</p>
-      </div>
-    </div>
-
-    <!-- Car black -->
-    <div class="video-pair">
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_black_og.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Original</p>
-      </div>
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_black_01.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Ours (reshooting)</p>
-      </div>
-    </div>
-
-    <!-- Car grey -->
-    <div class="video-pair">
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_grey_og.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Original</p>
-      </div>
-      <div class="video-card">
-        <video data-autoplay muted loop playsinline>
-          <source src="cvpr26v2v/results/car_grey_01.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label">Ours (reshooting)</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Inference example ───────────────────────────────────── -->
-<section id="inference">
-  <div class="container">
-    <h2>Inference Example</h2>
-    <p style="text-align:center;color:var(--muted);font-size:14px;margin-bottom:28px;">
-      Given one input video we reshoot it from two different anchor camera trajectories simultaneously.
+    <p class="paper-caption">
+      <b>The same pipeline on real footage.</b> Each row shows the source frames, the target frames, and the synthesized anchor for one training triplet. The black regions in the anchor are the disocclusions a new camera path would expose; the model is trained to fill them by routing textures from later source frames where the geometry was still visible. This is the supervisory signal that forces 4D structure to emerge from purely 2D data.
     </p>
 
-    <!--
-      Layout:
-        [  Input (vertically centred)  ] [ Anchor Camera  |  Reshooting Result ]   ← top pair
-                                         [ Anchor Camera  |  Reshooting Result ]   ← bottom pair
-    -->
-    <div style="display:flex;align-items:center;gap:24px;max-width:860px;margin:0 auto;">
-
-      <!-- Left: input video, vertically centred -->
-      <div style="flex:0 0 auto;width:260px;text-align:center;">
-        <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-          <source src="cvpr26v2v/ablations/78_82_input.mp4" type="video/mp4" />
-        </video>
-        <p class="video-label" style="margin-top:6px;">Input Video</p>
-      </div>
-
-      <!-- Arrow -->
-      <div style="font-size:28px;color:var(--accent);font-weight:700;flex:0 0 auto;">&#8594;</div>
-
-      <!-- Right: two rows stacked -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
-
-        <!-- Top pair: anchor + output (cam 78) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="text-align:center;">
-            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-              <source src="cvpr26v2v/ablations/78anchor.mp4" type="video/mp4" />
-            </video>
-            <p class="video-label" style="margin-top:6px;">Anchor Camera</p>
-          </div>
-          <div style="text-align:center;">
-            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-              <source src="cvpr26v2v/ablations/78output.mp4" type="video/mp4" />
-            </video>
-            <p class="video-label" style="margin-top:6px;">Reshooting Result</p>
-          </div>
-        </div>
-
-        <!-- Bottom pair: anchor + output (cam 82) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="text-align:center;">
-            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-              <source src="cvpr26v2v/ablations/82anchor.mp4" type="video/mp4" />
-            </video>
-            <p class="video-label" style="margin-top:6px;">Anchor Camera</p>
-          </div>
-          <div style="text-align:center;">
-            <video data-autoplay muted loop playsinline style="width:100%;border-radius:8px;border:1px solid var(--border);">
-              <source src="cvpr26v2v/ablations/82output.mp4" type="video/mp4" />
-            </video>
-            <p class="video-label" style="margin-top:6px;">Reshooting Result</p>
-          </div>
-        </div>
-
-      </div><!-- end right column -->
-    </div><!-- end flex wrapper -->
-  </div>
-</section>
-
-<!-- ── Method ─────────────────────────────────────────────── -->
-<section id="method">
-  <div class="container">
-    <h2>Method Overview</h2>
-
-    <div class="figure" style="max-width:880px;">
-      <img src="static/images/overview.webp" alt="Model architecture overview" />
-      <p class="figure-caption">
-        <strong>Figure 2.</strong> Overview of our conditioning architecture.
-        <strong>(1) VAE Encoding:</strong> The anchor video (V<sub>a</sub>) and source video (V<sub>s</sub>) are independently encoded into latents.
-        <strong>(2) Conditioning Setup:</strong> The anchor latent is combined with a noise latent; the source latent uses an all-ones mask ensuring all content is leveraged.
-        <strong>(3) DiT Processing:</strong> The two conditioned streams are <em>temporally concatenated</em> and jointly processed through the DiT blocks via self-attention, enabling fine-grained content routing.
-        <strong>(4) Source Token Management:</strong> An auxiliary reconstruction loss on output source tokens ensures high-fidelity content retention.
-      </p>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:40px;max-width:860px;margin-left:auto;margin-right:auto;">
+    <div class="method-grid">
       <div>
         <h3>Implicit 4D Learning</h3>
-        <p style="color:var(--muted);font-size:15px;">
-          Our training setup forces the model to learn 4D spatiotemporal structure from purely 2D data. Because the source and target crops are spatially misaligned and share occlusions, the model must search across <em>both space and time</em> in the source video to fill in missing target details — emerging as learned 4D reconstruction.
-        </p>
+        <p>Because the source and target crops are spatially misaligned and share occlusions, the model must search across <em>both space and time</em> in the source video to fill in missing target details. 4D structure emerges as a consequence, with no 3D supervision.</p>
       </div>
       <div>
         <h3>Self-Supervised Training</h3>
-        <p style="color:var(--muted);font-size:15px;">
-          Our entire pipeline relies only on a robust 2D dense tracker (AllTracker). It is domain-agnostic and scales to any monocular video: photorealistic footage, animation, and generative art — without restrictive domain limitations.
-        </p>
+        <p>The pipeline relies only on a robust 2D dense tracker (AllTracker). It is domain-agnostic and scales to any monocular video: photorealistic footage, animation, and generative art, without restrictive domain assumptions.</p>
       </div>
     </div>
 
-    <div style="margin-top:36px;max-width:860px;margin-left:auto;margin-right:auto;">
-      <h3 style="text-align:center;margin-bottom:16px;">Training Triplet Generation</h3>
-      <div class="figure">
-        <img src="static/images/video_triplets.webp" alt="Video triplet generation pipeline" />
-        <p class="figure-caption">
-          <strong>Figure 3.</strong> Pseudo multi-view triplet generation. Two independent smooth random-walk crop trajectories are sampled from a single input video. The anchor is synthesized by forward-warping the source's first frame using a combined dense tracking + crop offset flow field.
-        </p>
+    <div class="paper-frame">
+      <img src="static/images/overview.webp" alt="Conditioning architecture overview">
+    </div>
+    <p class="paper-caption">
+      <b>Our conditioning architecture.</b> <strong>(1) VAE Encoding:</strong> the anchor video (V<sub>a</sub>) and source video (V<sub>s</sub>) are independently encoded into latents (z<sub>a</sub>, z<sub>s</sub>). <strong>(2) Conditioning Setup:</strong> the anchor latent pairs with a noise latent z<sub>n</sub> and downsampled mask M<sub>a</sub>; the source latent duplicates itself in place of noise and uses an all-ones mask M<sub>s</sub>, so any source content is usable. <strong>(3) DiT Processing:</strong> both conditioned streams are patchified, <em>temporally concatenated</em>, and routed through the pre-trained DiT via self-attention — letting the model do fine-grained content routing without architecture changes. <strong>(4) Source Token Management:</strong> an auxiliary reconstruction loss on the output source tokens preserves high-fidelity texture through refinement.
+    </p>
+  </div>
+</section>
+
+<!-- QUALITATIVE RESULTS (preview) -->
+<section id="examples">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Qualitative Results</div>
+      <h2>Across people, vehicles, and lighting.</h2>
+      <p>The same model rendering new camera trajectories on scenes it never trained on. Same motion, same fine detail, a path the camera never actually took.</p>
+    </div>
+
+    <div class="rgrid">
+      <div class="rpair">
+        <figure class="rcell"><video src="cvpr26v2v/results/man_og.mp4" loop muted playsinline preload="metadata"></video><figcaption>Input</figcaption></figure>
+        <div class="rarrow">→</div>
+        <figure class="rcell out"><video src="cvpr26v2v/results/man_01.mp4" loop muted playsinline preload="metadata"></video><figcaption>Ours</figcaption></figure>
+      </div>
+      <div class="rpair">
+        <figure class="rcell"><video src="cvpr26v2v/results/car_og.mp4" loop muted playsinline preload="metadata"></video><figcaption>Input</figcaption></figure>
+        <div class="rarrow">→</div>
+        <figure class="rcell out"><video src="cvpr26v2v/results/car_01.mp4" loop muted playsinline preload="metadata"></video><figcaption>Ours</figcaption></figure>
+      </div>
+      <div class="rpair">
+        <figure class="rcell"><video src="cvpr26v2v/results/car_black_og.mp4" loop muted playsinline preload="metadata"></video><figcaption>Input</figcaption></figure>
+        <div class="rarrow">→</div>
+        <figure class="rcell out"><video src="cvpr26v2v/results/car_black_01.mp4" loop muted playsinline preload="metadata"></video><figcaption>Ours</figcaption></figure>
+      </div>
+      <div class="rpair">
+        <figure class="rcell"><video src="cvpr26v2v/results/car_grey_og.mp4" loop muted playsinline preload="metadata"></video><figcaption>Input</figcaption></figure>
+        <div class="rarrow">→</div>
+        <figure class="rcell out"><video src="cvpr26v2v/results/car_grey_01.mp4" loop muted playsinline preload="metadata"></video><figcaption>Ours</figcaption></figure>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Results / Comparisons ──────────────────────────────── -->
-<section id="results">
-  <div class="container">
-    <h2>Comparisons with State-of-the-Art</h2>
-    <p style="max-width:720px;margin:0 auto 28px;text-align:center;color:var(--muted);">
-      Our approach consistently outperforms existing methods in dynamic video reshooting, achieving leading performance across video quality, temporal consistency, camera accuracy, and view synchronization metrics.
-    </p>
-
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th class="left" rowspan="2" style="min-width:160px;">Method</th>
-            <th colspan="6">VBench Quality</th>
-            <th colspan="1">Temporal</th>
-            <th colspan="2">Camera Accuracy</th>
-            <th colspan="3">View Synchronization</th>
-          </tr>
-          <tr>
-            <th>Aesthetic&nbsp;&#8593;</th>
-            <th>Imaging&nbsp;&#8593;</th>
-            <th>Flickering&nbsp;&#8593;</th>
-            <th>Smoothness&nbsp;&#8593;</th>
-            <th>Subject&nbsp;&#8593;</th>
-            <th>Background&nbsp;&#8593;</th>
-            <th>CLIP-F&nbsp;&#8593;</th>
-            <th>RotErr&nbsp;&#8595;</th>
-            <th>TransErr&nbsp;&#8595;</th>
-            <th>Mat.Pix&nbsp;&#8593;</th>
-            <th>FVD-V&nbsp;&#8595;</th>
-            <th>CLIP-V&nbsp;&#8593;</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- TrajectoryCrafter 49-frame block -->
-          <tr>
-            <td class="left">TrajectoryCrafter (49 frames)</td>
-            <td>52.69</td>
-            <td class="best">59.67</td>
-            <td>96.97</td>
-            <td>99.03</td>
-            <td>93.78</td>
-            <td>95.13</td>
-            <td>98.80</td>
-            <td class="best">2.26</td>
-            <td>3.03</td>
-            <td>1851.80</td>
-            <td>582.56</td>
-            <td>92.40</td>
-          </tr>
-          <tr class="ours-row">
-            <td class="left"><strong>Ours</strong> (49 frames)</td>
-            <td class="best">52.72</td>
-            <td>57.81</td>
-            <td class="best">97.43</td>
-            <td class="best">99.24</td>
-            <td class="best">95.09</td>
-            <td class="best">95.62</td>
-            <td class="best">99.01</td>
-            <td>2.61</td>
-            <td class="best">2.73</td>
-            <td class="best">2737.65</td>
-            <td class="best">488.22</td>
-            <td class="best">94.96</td>
-          </tr>
-
-          <!-- Separator -->
-          <tr class="separator">
-            <td class="left">ReCamMaster</td>
-            <td>48.71</td>
-            <td>52.61</td>
-            <td class="best">97.57</td>
-            <td class="best">99.26</td>
-            <td>88.57</td>
-            <td>90.65</td>
-            <td>98.49</td>
-            <td>11.29</td>
-            <td>19.59</td>
-            <td>1314.00</td>
-            <td>732.52</td>
-            <td>88.91</td>
-          </tr>
-          <tr>
-            <td class="left">Ex4D</td>
-            <td>49.72</td>
-            <td>55.76</td>
-            <td>97.46</td>
-            <td>99.08</td>
-            <td>91.51</td>
-            <td>94.78</td>
-            <td>98.94</td>
-            <td>3.94</td>
-            <td class="best">4.21</td>
-            <td>2188.98</td>
-            <td>685.63</td>
-            <td>89.77</td>
-          </tr>
-          <tr class="ours-row">
-            <td class="left"><strong>Ours</strong></td>
-            <td class="best">52.85</td>
-            <td class="best">58.64</td>
-            <td>97.37</td>
-            <td>99.21</td>
-            <td class="best">93.43</td>
-            <td class="best">95.24</td>
-            <td class="best">99.03</td>
-            <td class="best">2.76</td>
-            <td>4.23</td>
-            <td class="best">2720.83</td>
-            <td class="best">586.24</td>
-            <td class="best">93.16</td>
-          </tr>
-        </tbody>
-      </table>
+<!-- COMPARISONS -->
+<section id="comparisons" class="dark">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Comparisons</div>
+      <h2>Outperforming every baseline.</h2>
+      <p>Across VBench quality, temporal consistency, camera accuracy, and view synchronization, our method beats TrajectoryCrafter, ReCamMaster, and Ex4D on complex dynamic scenes.</p>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center;">
-      <strong>Bold + underline</strong> = best in group. &#8593; higher is better, &#8595; lower is better.
-    </p>
+
+    <div class="data-surface">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="method-col" rowspan="2">Method</th>
+              <th colspan="6">VBench Quality</th>
+              <th>Temporal</th>
+              <th colspan="2">Camera Accuracy</th>
+              <th colspan="3">View Synchronization</th>
+            </tr>
+            <tr>
+              <th>Aesth &uarr;</th><th>Imag &uarr;</th><th>Flick &uarr;</th><th>Smooth &uarr;</th><th>Subj &uarr;</th><th>Bg &uarr;</th>
+              <th>CLIP-F &uarr;</th>
+              <th>RotErr &darr;</th><th>TransErr &darr;</th>
+              <th>Mat.Pix &uarr;</th><th>FVD-V &darr;</th><th>CLIP-V &uarr;</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="method-col">TrajectoryCrafter (49 frames)</td>
+              <td>52.69</td><td class="best">59.67</td><td>96.97</td><td>99.03</td><td>93.78</td><td>95.13</td>
+              <td>98.80</td><td class="best">2.26</td><td>3.03</td><td>1851.80</td><td>582.56</td><td>92.40</td>
+            </tr>
+            <tr class="ours-row">
+              <td class="method-col"><strong>Ours</strong> (49 frames)</td>
+              <td class="best">52.72</td><td>57.81</td><td class="best">97.43</td><td class="best">99.24</td><td class="best">95.09</td><td class="best">95.62</td>
+              <td class="best">99.01</td><td>2.61</td><td class="best">2.73</td><td class="best">2737.65</td><td class="best">488.22</td><td class="best">94.96</td>
+            </tr>
+            <tr class="separator">
+              <td class="method-col">ReCamMaster</td>
+              <td>48.71</td><td>52.61</td><td class="best">97.57</td><td class="best">99.26</td><td>88.57</td><td>90.65</td>
+              <td>98.49</td><td>11.29</td><td>19.59</td><td>1314.00</td><td>732.52</td><td>88.91</td>
+            </tr>
+            <tr>
+              <td class="method-col">Ex4D</td>
+              <td>49.72</td><td>55.76</td><td>97.46</td><td>99.08</td><td>91.51</td><td>94.78</td>
+              <td>98.94</td><td>3.94</td><td class="best">4.21</td><td>2188.98</td><td>685.63</td><td>89.77</td>
+            </tr>
+            <tr class="ours-row">
+              <td class="method-col"><strong>Ours</strong></td>
+              <td class="best">52.85</td><td class="best">58.64</td><td>97.37</td><td>99.21</td><td class="best">93.43</td><td class="best">95.24</td>
+              <td class="best">99.03</td><td class="best">2.76</td><td>4.23</td><td class="best">2720.83</td><td class="best">586.24</td><td class="best">93.16</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="table-note"><b>Underline</b> &equiv; best in group. &uarr; higher is better, &darr; lower is better.</p>
   </div>
 </section>
 
-<!-- ── Ablations ──────────────────────────────────────────── -->
+<!-- ABLATIONS -->
 <section id="ablations">
-  <div class="container">
-    <h2>Ablation Studies</h2>
-    <p style="max-width:720px;margin:0 auto 20px;text-align:center;color:var(--muted);">
-      We ablate core architectural and training choices. Our baseline uses a black anchor background, token concatenation through self-attention, and monocular videos without augmentations.
-    </p>
-
-    <div class="figure" style="max-width:860px;">
-      <img src="static/images/ablation_comp.webp" alt="Qualitative ablation comparisons" />
-      <p class="figure-caption">
-        <strong>Figure 4.</strong> Qualitative ablation on a complex scene with moving smoke and colored lighting.
-        The <em>Synthetic Data Only</em> model fails to capture dynamic smoke.
-        The <em>Cross-Attention</em> model loses fine source details (saxophone texture) and struggles with anchor alignment.
-        Our full model faithfully tracks the anchor while preserving high-fidelity textures and complex dynamics.
-      </p>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Ablations</div>
+      <h2>What matters for dynamic reshooting.</h2>
+      <p>We ablate core architectural and training choices. Our baseline uses a black anchor background, token concatenation through self-attention, and monocular videos without augmentations.</p>
     </div>
 
-    <div class="table-wrapper" style="margin-top:28px;max-width:680px;margin-left:auto;margin-right:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th class="left" style="min-width:200px;">Method</th>
-            <th>RotErr&nbsp;&#8595;</th>
-            <th>TransErr&nbsp;&#8595;</th>
-            <th>Mat.Pix&nbsp;&#8593;</th>
-            <th>FVD-V&nbsp;&#8595;</th>
-            <th>CLIP-V&nbsp;&#8593;</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="left">Baseline (w/ self-attn)</td>
-            <td>3.27</td><td>4.92</td><td>2636</td><td>595.39</td><td>92.94</td>
-          </tr>
-          <tr class="separator">
-            <td class="left">&nbsp;&nbsp;&#x2014; Source Video</td>
-            <td>4.82</td><td>11.65</td><td>226</td><td>662.09</td><td>89.97</td>
-          </tr>
-          <tr class="separator">
-            <td class="left">&nbsp;&nbsp;+ Gaussian Noise in Latent</td>
-            <td>2.81</td><td>5.05</td><td>2586</td><td>605.93</td><td>91.70</td>
-          </tr>
-          <tr>
-            <td class="left">&nbsp;&nbsp;+ 3D Noise in Anchor</td>
-            <td class="best">2.49</td><td>4.95</td><td>2624</td><td>598.67</td><td>92.88</td>
-          </tr>
-          <tr class="separator">
-            <td class="left">&nbsp;&nbsp;w/ Cross-Attention</td>
-            <td>3.53</td><td>4.31</td><td>1766</td><td>626.37</td><td>91.64</td>
-          </tr>
-          <tr>
-            <td class="left">&nbsp;&nbsp;+ Auxiliary Loss</td>
-            <td>2.76</td><td>4.98</td><td>2627</td><td class="best">562.94</td><td>92.93</td>
-          </tr>
-          <tr>
-            <td class="left">&nbsp;&nbsp;+ LoRA</td>
-            <td>2.85</td><td class="best">4.17</td><td>2615</td><td>578.91</td><td class="best">92.98</td>
-          </tr>
-          <tr>
-            <td class="left">&nbsp;&nbsp;+ Random Query</td>
-            <td>3.36</td><td>4.52</td><td>2618</td><td>571.74</td><td>92.83</td>
-          </tr>
-          <tr>
-            <td class="left">&nbsp;&nbsp;+ Fluorescent Background Anchor</td>
-            <td>3.16</td><td>4.78</td><td>2627</td><td>571.06</td><td>92.68</td>
-          </tr>
-          <tr class="separator">
-            <td class="left">w/ Synthetic Data (Syn)</td>
-            <td>3.70</td><td>5.04</td><td>1746</td><td>608.03</td><td>91.86</td>
-          </tr>
-          <tr class="ours-row">
-            <td class="left"><strong>w/ Monocular Videos (Ours)</strong></td>
-            <td>2.76</td><td>4.23</td><td class="best">2720</td><td>586.24</td><td>93.16</td>
-          </tr>
-          <tr class="ours-row">
-            <td class="left"><strong>Ours + Syn</strong></td>
-            <td>3.36</td><td>3.66</td><td>2577</td><td>587.91</td><td>92.64</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="paper-frame compact">
+      <img src="static/images/ablation_comp.webp" alt="Qualitative ablation comparisons">
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center;">
-      <strong>Bold + underline</strong> = best per column. &#8593; higher is better, &#8595; lower is better.
+    <p class="paper-caption">
+      <b>Qualitative ablation on a complex scene</b> with moving smoke and colored lighting. The <em>Synthetic Data Only</em> model fails to capture dynamic smoke, snapping to rigid plausible content instead. The <em>Cross-Attention</em> variant loses fine source detail (notice the saxophone texture) and struggles to align with the anchor when geometry deviates. Our full model faithfully tracks the anchor's new camera path while preserving high-fidelity textures and the complex dynamics of the original footage.
     </p>
+
   </div>
 </section>
 
-<!-- ── BibTeX ──────────────────────────────────────────────── -->
-<section id="bibtex">
-  <div class="container">
-    <h2>BibTeX</h2>
-    <div style="max-width:680px;margin:0 auto;position:relative;">
-      <pre class="bibtex" id="bibtex-text">@article{paliwal2026reshootanything,
-  title   = {Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting},
-  author  = {Paliwal, Avinash and Iyer, Adithya and Yadav, Shivin and Afridi, Muhammad Ali and Harikumar, Midhun},
-  journal = {arXiv preprint arXiv:2604.21776},
-  year    = {2026},
-  url     = {https://arxiv.org/abs/2604.21776}
-}</pre>
-      <button class="btn copy-btn" id="copy-bibtex">Copy</button>
+<!-- BIBTEX -->
+<section id="bibtex" class="dark">
+  <div class="wrap">
+    <div class="section-head eyebrow-only">
+      <div class="kicker">BibTeX</div>
+    </div>
+    <div class="bibtex-box">
+      <button class="copy-btn" type="button">Copy</button>
+      <pre><code id="bibtex-text">@InProceedings{paliwal2026reshoot,
+    author    = {Paliwal, Avinash and Iyer, Adithya and Yadav, Shivin and Afridi, Muhammad and Harikumar, Midhun},
+    title     = {Reshoot-Anything: A Self-Supervised Model for In-the-Wild Video Reshooting},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+    month     = {June},
+    year      = {2026},
+    pages     = {11596-11606}
+}</code></pre>
     </div>
   </div>
 </section>
 
-<!-- ── Acknowledgements ───────────────────────────────────── -->
+<!-- ACKNOWLEDGEMENTS -->
 <section id="ack">
-  <div class="container">
-    <h2>Acknowledgements</h2>
-    <p class="ack">
-      We'd like to thank the members of <strong>Morphic</strong> for compute resources and motivation, and <strong>Dharmesh Kakadia</strong> and <strong>Isaac Wang</strong> for reviewing the paper.
-    </p>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Acknowledgements</div>
+      <p>We thank <b>Jaynti Kanani</b> and the rest of the <b>Morphic team</b> for compute resources and support, and <b>Dharmesh Kakadia</b> and <b>Isaac Wang</b> for reviewing the paper.</p>
+    </div>
   </div>
 </section>
 
-<!-- ── Footer ────────────────────────────────────────────── -->
-<footer>
-  <div class="container">
-    <p>
-      Reshoot-Anything &nbsp;&middot;&nbsp;
-      Website source on <a href="https://github.com/morphicfilms/video-to-video" target="_blank">GitHub</a>
-    </p>
+<!-- FOOT -->
+<div class="foot">
+  <div class="wrap">
+    Website source on <a href="https://github.com/adithyaiyer1999/reshoot-anything" target="_blank" rel="noopener noreferrer" rel="noopener noreferrer">GitHub</a>
   </div>
-</footer>
+</div>
 
-<script src="static/js/main.js"></script>
+<script>
+/* COPY BIBTEX */
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tgt = btn.parentElement.querySelector('pre, code');
+    if(!tgt) return;
+    navigator.clipboard.writeText(tgt.innerText).then(()=>{
+      const orig = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    });
+  });
+});
+
+/* GROUP-LEVEL VIDEO PLAYBACK
+   - Each .hero-vid / .rpair owns one play/pause state.
+   - Plays only when group intersects viewport; pauses on exit.
+   - Lockstep start within group: pause -> currentTime=0 -> play all in same frame.
+   - Drift correction every 2s while group is in view.
+   - Fully disabled under prefers-reduced-motion: reduce (videos get controls instead).
+*/
+(function(){
+  const groups = [...document.querySelectorAll('.hero-vid, .rpair, .pipeline-row')];
+  if(!groups.length) return;
+
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function setReducedMode(on){
+    document.querySelectorAll('.hero-vid video, .rpair video, .pipeline-row video').forEach(v=>{
+      if(on){ v.pause(); v.removeAttribute('loop'); v.setAttribute('controls',''); }
+      else  { v.removeAttribute('controls'); v.setAttribute('loop',''); }
+    });
+  }
+
+  if(motionQuery.matches){ setReducedMode(true); return; }
+  motionQuery.addEventListener?.('change', e => setReducedMode(e.matches));
+
+  const playing = new WeakSet();
+
+  function startGroup(g){
+    const vids = [...g.querySelectorAll('video')];
+    if(!vids.length) return;
+    const allReady = () => vids.every(v => v.readyState >= 3);
+    const startAll = () => {
+      vids.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
+      requestAnimationFrame(() => vids.forEach(v => v.play().catch(()=>{})));
+    };
+    if(allReady()){ startAll(); return; }
+    let pending = vids.length;
+    vids.forEach(v => {
+      const h = () => {
+        v.removeEventListener('canplay', h);
+        v.removeEventListener('loadeddata', h);
+        if(--pending <= 0 && playing.has(g)) startAll();
+      };
+      if(v.readyState >= 3) h();
+      else {
+        v.addEventListener('canplay', h);
+        v.addEventListener('loadeddata', h);
+      }
+    });
+  }
+
+  function pauseGroup(g){
+    g.querySelectorAll('video').forEach(v => v.pause());
+  }
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const g = entry.target;
+      if(entry.isIntersecting){
+        if(!playing.has(g)){ playing.add(g); startGroup(g); }
+      } else {
+        if(playing.has(g)){ playing.delete(g); pauseGroup(g); }
+      }
+    });
+  }, { threshold: 0.25 });
+
+  groups.forEach(g => io.observe(g));
+
+  /* drift correction — only for groups currently playing */
+  setInterval(()=>{
+    groups.forEach(g => {
+      if(!playing.has(g)) return;
+      const vids = [...g.querySelectorAll('video')];
+      if(vids.length < 2) return;
+      const master = vids[0];
+      if(master.paused || master.readyState < 3) return;
+      vids.slice(1).forEach(v => {
+        if(v.readyState < 3) return;
+        if(Math.abs(v.currentTime - master.currentTime) > 0.25){
+          v.currentTime = master.currentTime;
+        }
+      });
+    });
+  }, 2000);
+})();
+</script>
 </body>
 </html>
