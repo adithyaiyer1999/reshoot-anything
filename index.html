@@ -141,6 +141,8 @@ b,strong{color:var(--ink);font-weight:500}
 }
 .authors a:hover{color:var(--pink);border-bottom-color:var(--pink)}
 .authors .aff{margin-top:1.2rem}
+.authors sup{font-size:.65em;color:var(--pink);margin-left:.05em;vertical-align:super}
+.authors .equal{margin-top:.55rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:var(--ink-faint);text-transform:none;line-height:1.5}
 .morphic-logo{
   display:block;height:34px;width:auto;margin:0 auto;
   mix-blend-mode:screen;opacity:.95;
@@ -361,12 +363,13 @@ section.dark{background:var(--bg2)}
 
     <div class="authors">
       <div>
-        <a href="http://avinashpaliwal.com/" target="_blank" rel="noopener noreferrer">Avinash Paliwal</a> ·
-        <a href="https://adithyaiyer1999.github.io/" target="_blank" rel="noopener noreferrer">Adithya Iyer</a> ·
+        <a href="http://avinashpaliwal.com/" target="_blank" rel="noopener noreferrer">Avinash Paliwal</a><sup>*</sup> ·
+        <a href="https://adithyaiyer1999.github.io/" target="_blank" rel="noopener noreferrer">Adithya Iyer</a><sup>*</sup> ·
         Shivin Yadav ·
         Muhammad Ali Afridi ·
         Midhun Harikumar
       </div>
+      <div class="equal"><sup>*</sup> Equal contribution</div>
       <div class="aff">
         <a href="https://morphic.com/" target="_blank" rel="noopener noreferrer" aria-label="Morphic">
           <img class="morphic-logo" src="static/images/morphic-logo.webp" alt="Morphic">
