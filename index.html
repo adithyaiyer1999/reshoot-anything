@@ -88,7 +88,7 @@
     </p>
 
     <div class="figure" style="max-width:860px;">
-      <img src="static/images/teaser.png" alt="Self-supervised training data construction — teaser figure" />
+      <img src="static/images/teaser.webp" alt="Self-supervised training data construction — teaser figure" />
       <p class="figure-caption">
         <strong>Figure 1.</strong> Our self-supervised training data pipeline. Two independent smooth random-walk crop trajectories are extracted from a single input video to form source &amp; target pseudo-views. The anchor is generated via dense-tracking-guided forward-warping, simulating the point-cloud anchors used at inference.
       </p>
@@ -314,7 +314,7 @@
     <h2>Method Overview</h2>
 
     <div class="figure" style="max-width:880px;">
-      <img src="static/images/overview.png" alt="Model architecture overview" />
+      <img src="static/images/overview.webp" alt="Model architecture overview" />
       <p class="figure-caption">
         <strong>Figure 2.</strong> Overview of our conditioning architecture.
         <strong>(1) VAE Encoding:</strong> The anchor video (V<sub>a</sub>) and source video (V<sub>s</sub>) are independently encoded into latents.
@@ -342,7 +342,7 @@
     <div style="margin-top:36px;max-width:860px;margin-left:auto;margin-right:auto;">
       <h3 style="text-align:center;margin-bottom:16px;">Training Triplet Generation</h3>
       <div class="figure">
-        <img src="static/images/video_triplets.png" alt="Video triplet generation pipeline" />
+        <img src="static/images/video_triplets.webp" alt="Video triplet generation pipeline" />
         <p class="figure-caption">
           <strong>Figure 3.</strong> Pseudo multi-view triplet generation. Two independent smooth random-walk crop trajectories are sampled from a single input video. The anchor is synthesized by forward-warping the source's first frame using a combined dense tracking + crop offset flow field.
         </p>
@@ -481,7 +481,7 @@
     </p>
 
     <div class="figure" style="max-width:860px;">
-      <img src="static/images/ablation_comp.png" alt="Qualitative ablation comparisons" />
+      <img src="static/images/ablation_comp.webp" alt="Qualitative ablation comparisons" />
       <p class="figure-caption">
         <strong>Figure 4.</strong> Qualitative ablation on a complex scene with moving smoke and colored lighting.
         The <em>Synthetic Data Only</em> model fails to capture dynamic smoke.
