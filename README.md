@@ -28,7 +28,6 @@ static/
 cvpr26v2v/
   results/              ← side-by-side example videos
   ablations/            ← inference example videos
-ReTake_V2V.pdf          ← paper PDF
 .nojekyll               ← tells GitHub Pages not to run Jekyll
 ```
 

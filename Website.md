@@ -31,24 +31,8 @@ Precise camera control for reshooting dynamic videos is bottlenecked by the seve
 
 ## Training Data Construction
 
-
-ReTake_V2V/figures/teaser.pdf -> put image from this here : convert pdf->png save it there
-
 cvpr26v2v/ablations/input.mp4 -----> 4D Point Cloud + Camera ---->  cvpr26v2v/ablations/render_pink.mp4
 cvpr26v2v/ablations/78_82_input.mp4 -----> 4D Point Cloud + Camera ---->  cvpr26v2v/ablations/render_pink78.mp4
-
-
-## Model Architecture
-
-ReTake_V2V/figures/overview.pdf -> put image from this here : convert pdf->png save it there
-
-## Ablations 
-
-Add table-main-comparison from ReTake_V2V/sec_arxiv/4_method.tex
-
-## Comparisons
-
-table-main-comparison from ReTake_V2V/sec_arxiv/6_experiments.tex
 
 
 ## Acknowledgements
